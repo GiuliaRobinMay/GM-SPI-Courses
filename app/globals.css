@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter,
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Named colours become utilities: bg-canvas, border-hairline, text-ink… */
+  --color-canvas: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-hairline: #e8e9ee;
+  --color-ink: #14161c;
+  --color-muted: #6b7180;
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* The app is deliberately light-only: it mirrors the reference UX. */
+  :root {
+    color-scheme: light;
+  }
+
+  ::selection {
+    background: #ddd9fe;
+  }
+}
+
+/* Declared as utilities (not plain classes) so they can be @applied. */
+
+@utility card {
+  @apply rounded-2xl border border-hairline bg-white;
+}
+
+@utility card-hover {
+  @apply transition hover:border-slate-300 hover:shadow-[0_6px_24px_-12px_rgb(20_22_28/0.18)];
+}
+
+@utility chip {
+  @apply inline-flex items-center gap-1.5 rounded-full border border-hairline
+    bg-white px-3 py-1.5 text-[13px] font-medium text-slate-600 transition
+    hover:border-slate-300 hover:text-slate-900;
+}
+
+@utility chip-active {
+  @apply border-slate-900 bg-slate-900 text-white hover:border-slate-900 hover:text-white;
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2
+    text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@utility btn-primary {
+  @apply btn bg-indigo-600 text-white hover:bg-indigo-700;
+}
+
+@utility btn-ghost {
+  @apply btn border border-hairline bg-white text-slate-700
+    hover:border-slate-300 hover:bg-slate-50;
+}
+
+@utility btn-quiet {
+  @apply btn text-slate-500 hover:bg-slate-100 hover:text-slate-900;
+}
+
+@utility field {
+  @apply w-full rounded-xl border border-hairline bg-white px-3.5 py-2.5
+    text-sm text-slate-900 placeholder:text-slate-400
+    focus:border-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/10;
+}
+
+@utility label {
+  @apply mb-1.5 block text-[13px] font-medium text-slate-700;
+}
+
+@utility section-title {
+  @apply text-[19px] font-semibold tracking-[-0.01em] text-slate-900;
+}
+
+@utility muted {
+  @apply text-[13px] text-slate-500;
+}
