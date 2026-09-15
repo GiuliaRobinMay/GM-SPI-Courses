@@ -80,6 +80,8 @@ interface LibraryValue {
 
   addCreator(input: Partial<Creator> & { name: string }): Creator;
 
+  /** Add the SPI course list, skipping any course already present. */
+  addStarterCourses(): number;
   /** Merge course files into the library without removing anything. */
   importPackages(packages: CoursePackage[]): ImportReport[];
   /** Replace the whole library — used by the full-library restore. */
@@ -360,6 +362,35 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     setDb(withStudyOutput(next));
   }, []);
 
+  /**
+   * Put the SPI courses into whatever library already exists. Ids are stable,
+   * so running it twice adds nothing the second time and no lesson is touched.
+   */
+  const addStarterCourses: LibraryValue["addStarterCourses"] = useCallback(() => {
+    const starter = seedDatabase();
+    let added = 0;
+    setDb((prev) => {
+      const courseIds = new Set(prev.courses.map((c) => c.id));
+      const facultyIds = new Set(prev.faculties.map((f) => f.id));
+      const creatorIds = new Set(prev.creators.map((c) => c.id));
+      const newCourses = starter.courses.filter((c) => !courseIds.has(c.id));
+      added = newCourses.length;
+      return {
+        ...prev,
+        faculties: [
+          ...prev.faculties,
+          ...starter.faculties.filter((f) => !facultyIds.has(f.id)),
+        ],
+        creators: [
+          ...prev.creators,
+          ...starter.creators.filter((c) => !creatorIds.has(c.id)),
+        ],
+        courses: [...prev.courses, ...newCourses],
+      };
+    });
+    return added;
+  }, []);
+
   const resetToDemo = useCallback(() => setDb(seedDatabase()), []);
   const clearAll = useCallback(
     () => setDb({ ...structuredClone(emptyDatabase), creators: [{ id: "cr-self", name: "You", isSelf: true }] }),
@@ -391,6 +422,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       setLessonStatus,
       regenerateStudy,
       addCreator,
+      addStarterCourses,
       importPackages,
       replaceAll,
       resetToDemo,
@@ -401,7 +433,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       lessonsOf, courseProgress, search, addFaculty, updateFaculty,
       removeFaculty, addCourse, updateCourse, removeCourse, addLesson,
       updateLesson, removeLesson, setLessonStatus, regenerateStudy, addCreator,
-      importPackages, replaceAll, resetToDemo, clearAll,
+      addStarterCourses, importPackages, replaceAll, resetToDemo, clearAll,
     ],
   );
 

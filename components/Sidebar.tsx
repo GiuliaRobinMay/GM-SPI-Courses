@@ -7,6 +7,7 @@ import { PanelLeft, PanelLeftClose, Plus, Settings } from "lucide-react";
 import { useLibrary } from "@/lib/store";
 import { accent } from "@/lib/theme";
 import { CourseDialog } from "./CourseDialog";
+import { FacultyIcon } from "./Icon";
 
 /**
  * Studiolo at the top, every course in the middle, settings and you at the
@@ -24,7 +25,7 @@ export function Sidebar() {
   return (
     <aside
       className={`sticky top-0 flex h-dvh shrink-0 flex-col border-r border-hairline bg-white transition-[width] ${
-        collapsed ? "w-[68px]" : "w-[248px]"
+        collapsed ? "w-[68px]" : "w-[276px]"
       }`}
     >
       <div className="flex items-center gap-2 px-4 py-4">
@@ -80,17 +81,16 @@ export function Sidebar() {
                 }`}
               >
                 <span
-                  className={`size-2.5 shrink-0 rounded-full ${tone.solid}`}
-                  aria-hidden
-                />
+                  className={`flex size-7 shrink-0 items-center justify-center rounded-lg ${tone.soft} ${tone.softText}`}
+                >
+                  <FacultyIcon name={course.icon ?? "book"} className="size-4" />
+                </span>
                 {!collapsed && (
                   <>
                     <span className="truncate">{course.title}</span>
-                    {count > 0 && (
-                      <span className="ml-auto text-[12px] tabular-nums text-slate-400">
-                        {count}
-                      </span>
-                    )}
+                    <span className="ml-auto text-[12px] tabular-nums text-slate-400">
+                      {count}
+                    </span>
                   </>
                 )}
               </Link>

@@ -54,6 +54,8 @@ export interface Course {
   /** Free-form topics used for filtering and search */
   topics: string[];
   accent: AccentToken;
+  /** Lucide icon name — see components/Icon.tsx for the allow-list */
+  icon?: string;
 
   /**
    * Where this course sits in a progression — "Level 0", "Level 2",

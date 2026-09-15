@@ -17,32 +17,33 @@ interface Spec {
   track: string;
   trackOrder: number;
   accent: Course["accent"];
+  icon: string;
 }
 
 const SPI: Spec[] = [
   // Level 0 — start here
-  { slug: "business-101-smart-from-scratch", title: "Smart From Scratch", track: "Level 0 — Start here", trackOrder: 0, accent: "emerald" },
-  { slug: "list-building-mini-course", title: "List Building Mini-Course", track: "Level 0 — Start here", trackOrder: 0, accent: "emerald" },
+  { slug: "business-101-smart-from-scratch", title: "Smart From Scratch", track: "Level 0 — Start here", trackOrder: 0, accent: "emerald", icon: "lightbulb" },
+  { slug: "list-building-mini-course", title: "List Building Mini-Course", track: "Level 0 — Start here", trackOrder: 0, accent: "emerald", icon: "users" },
 
   // Level 1 — build an audience
-  { slug: "1-2-3-affiliate-marketing", title: "1•2•3 Affiliate Marketing", track: "Level 1 — Build an audience", trackOrder: 1, accent: "sky" },
-  { slug: "short-form-formula", title: "Short-Form Formula", track: "Level 1 — Build an audience", trackOrder: 1, accent: "sky" },
-  { slug: "sponsor-me", title: "Sponsor Me", track: "Level 1 — Build an audience", trackOrder: 1, accent: "sky" },
-  { slug: "landing-pages-101", title: "Landing Pages 101", track: "Level 1 — Build an audience", trackOrder: 1, accent: "sky" },
-  { slug: "lead-magnet-mini-series", title: "Lead Magnet Mini-Series", track: "Level 1 — Build an audience", trackOrder: 1, accent: "sky" },
+  { slug: "1-2-3-affiliate-marketing", title: "1•2•3 Affiliate Marketing", track: "Level 1 — Build an audience", trackOrder: 1, accent: "sky", icon: "link" },
+  { slug: "short-form-formula", title: "Short-Form Formula", track: "Level 1 — Build an audience", trackOrder: 1, accent: "sky", icon: "video" },
+  { slug: "sponsor-me", title: "Sponsor Me", track: "Level 1 — Build an audience", trackOrder: 1, accent: "sky", icon: "handshake" },
+  { slug: "landing-pages-101", title: "Landing Pages 101", track: "Level 1 — Build an audience", trackOrder: 1, accent: "sky", icon: "layout" },
+  { slug: "lead-magnet-mini-series", title: "Lead Magnet Mini-Series", track: "Level 1 — Build an audience", trackOrder: 1, accent: "sky", icon: "magnet" },
 
   // Level 2 — build the business
-  { slug: "for-hire", title: "For Hire", track: "Level 2 — Build the business", trackOrder: 2, accent: "indigo" },
-  { slug: "email-marketing-magic-course", title: "Email Marketing Magic", track: "Level 2 — Build the business", trackOrder: 2, accent: "indigo" },
-  { slug: "heroic-online-courses-course", title: "Heroic Online Courses", track: "Level 2 — Build the business", trackOrder: 2, accent: "indigo" },
-  { slug: "power-up-podcasting-course", title: "Power-Up Podcasting", track: "Level 2 — Build the business", trackOrder: 2, accent: "indigo" },
-  { slug: "simple-site-success", title: "Simple Site Success", track: "Level 2 — Build the business", trackOrder: 2, accent: "indigo" },
-  { slug: "smart-offer-design", title: "Smart Offer Design", track: "Level 2 — Build the business", trackOrder: 2, accent: "indigo" },
-  { slug: "youtube-from-scratch-course", title: "YouTube From Scratch", track: "Level 2 — Build the business", trackOrder: 2, accent: "indigo" },
+  { slug: "for-hire", title: "For Hire", track: "Level 2 — Build the business", trackOrder: 2, accent: "indigo", icon: "briefcase" },
+  { slug: "email-marketing-magic-course", title: "Email Marketing Magic", track: "Level 2 — Build the business", trackOrder: 2, accent: "indigo", icon: "mail" },
+  { slug: "heroic-online-courses-course", title: "Heroic Online Courses", track: "Level 2 — Build the business", trackOrder: 2, accent: "indigo", icon: "cap" },
+  { slug: "power-up-podcasting-course", title: "Power-Up Podcasting", track: "Level 2 — Build the business", trackOrder: 2, accent: "indigo", icon: "mic" },
+  { slug: "simple-site-success", title: "Simple Site Success", track: "Level 2 — Build the business", trackOrder: 2, accent: "indigo", icon: "globe" },
+  { slug: "smart-offer-design", title: "Smart Offer Design", track: "Level 2 — Build the business", trackOrder: 2, accent: "indigo", icon: "target" },
+  { slug: "youtube-from-scratch-course", title: "YouTube From Scratch", track: "Level 2 — Build the business", trackOrder: 2, accent: "indigo", icon: "camera" },
 
   // Level 3 — scale it
-  { slug: "a-to-z-webinars", title: "A to Z Webinars", track: "Level 3 — Scale it", trackOrder: 3, accent: "violet" },
-  { slug: "community-business-blueprint-course", title: "Community Business Blueprint", track: "Level 3 — Scale it", trackOrder: 3, accent: "violet" },
+  { slug: "a-to-z-webinars", title: "A to Z Webinars", track: "Level 3 — Scale it", trackOrder: 3, accent: "violet", icon: "presentation" },
+  { slug: "community-business-blueprint-course", title: "Community Business Blueprint", track: "Level 3 — Scale it", trackOrder: 3, accent: "violet", icon: "community" },
 ];
 
 const courses: Course[] = SPI.map((spec) => ({
@@ -53,6 +54,7 @@ const courses: Course[] = SPI.map((spec) => ({
   sourceUrl: `https://community.smartpassiveincome.com/c/${spec.slug}`,
   topics: [],
   accent: spec.accent,
+  icon: spec.icon,
   track: spec.track,
   trackOrder: spec.trackOrder,
   createdAt: now,

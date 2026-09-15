@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CloudUpload, Download, FolderPlus, LogOut, RotateCcw, Trash2, Upload } from "lucide-react";
+import {
+  CloudUpload, Download, FolderPlus, GraduationCap, LogOut, RotateCcw, Trash2, Upload,
+} from "lucide-react";
 import { useLibrary } from "@/lib/store";
 import { localPersistence, persistence, storageReport, isSupabaseConfigured } from "@/lib/persistence";
 import { getSupabase } from "@/lib/supabase/client";
@@ -9,7 +11,8 @@ import { validatePackage, type ImportReport } from "@/lib/importer";
 import type { CoursePackage } from "@/lib/types";
 
 export default function SettingsPage() {
-  const { db, resetToDemo, clearAll, importPackages, replaceAll } = useLibrary();
+  const { db, resetToDemo, clearAll, importPackages, replaceAll, addStarterCourses } =
+    useLibrary();
   const [message, setMessage] = useState<string | null>(null);
   const [reports, setReports] = useState<ImportReport[]>([]);
   const [storage, setStorage] = useState<{ used: number; quota: number | null } | null>(null);
@@ -84,6 +87,27 @@ export default function SettingsPage() {
       </div>
 
       <section className="card divide-y divide-hairline">
+        <Row
+          title="Add the SPI courses"
+          body="Puts the sixteen Smart Passive Income courses into your library, each linked back to its community page. Nothing else is touched, and running it twice changes nothing."
+          action={
+            <button
+              className="btn-ghost"
+              onClick={() => {
+                const added = addStarterCourses();
+                setReports([]);
+                setMessage(
+                  added > 0
+                    ? `Added ${added} SPI course${added === 1 ? "" : "s"}.`
+                    : "All sixteen SPI courses are already in your library.",
+                );
+              }}
+            >
+              <GraduationCap className="size-4" />
+              Add them
+            </button>
+          }
+        />
         <Row
           title="Add course files"
           body="Merges one or more course files into your library. Nothing is removed, and re-importing a course updates it in place."
