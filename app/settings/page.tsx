@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Download, FolderPlus, RotateCcw, Trash2, Upload } from "lucide-react";
+import { CloudUpload, Download, FolderPlus, LogOut, RotateCcw, Trash2, Upload } from "lucide-react";
 import { useLibrary } from "@/lib/store";
-import { storageReport } from "@/lib/persistence";
+import { localPersistence, persistence, storageReport, isSupabaseConfigured } from "@/lib/persistence";
+import { getSupabase } from "@/lib/supabase/client";
 import { validatePackage, type ImportReport } from "@/lib/importer";
 import type { CoursePackage } from "@/lib/types";
 
@@ -76,7 +77,9 @@ export default function SettingsPage() {
           Settings
         </h1>
         <p className="muted mt-1">
-          This template keeps everything in your browser. Nothing leaves this device.
+          {isSupabaseConfigured
+            ? "Your library is stored in your account and follows you between devices."
+            : "Everything is kept in this browser. Nothing leaves this device."}
         </p>
       </div>
 
@@ -191,6 +194,58 @@ export default function SettingsPage() {
         />
       </section>
 
+      {isSupabaseConfigured && (
+        <section className="card divide-y divide-hairline">
+          <Row
+            title="Move this browser's library into your account"
+            body="Reads whatever is still stored locally in this browser and merges it into your account. Run it once, after signing in for the first time."
+            action={
+              <button
+                className="btn-ghost"
+                onClick={async () => {
+                  const local = await localPersistence.load();
+                  if (!local || local.courses.length === 0) {
+                    setMessage("Nothing stored locally in this browser to move.");
+                    return;
+                  }
+                  const merged: typeof local = {
+                    version: 1,
+                    faculties: dedupe([...db.faculties, ...local.faculties]),
+                    creators: dedupe([...db.creators, ...local.creators]),
+                    courses: dedupe([...db.courses, ...local.courses]),
+                    lessons: dedupe([...db.lessons, ...local.lessons]),
+                  };
+                  replaceAll(merged);
+                  await persistence.save(merged);
+                  setMessage(
+                    `Moved ${local.courses.length} courses and ${local.lessons.length} lessons into your account.`,
+                  );
+                }}
+              >
+                <CloudUpload className="size-4" />
+                Move it up
+              </button>
+            }
+          />
+          <Row
+            title="Sign out"
+            body="Your library stays in your account."
+            action={
+              <button
+                className="btn-ghost"
+                onClick={async () => {
+                  await getSupabase()?.auth.signOut();
+                  window.location.reload();
+                }}
+              >
+                <LogOut className="size-4" />
+                Sign out
+              </button>
+            }
+          />
+        </section>
+      )}
+
       {message && (
         <p className="rounded-xl bg-slate-100 px-4 py-3 text-[13px] text-slate-700">
           {message}
@@ -253,12 +308,22 @@ export default function SettingsPage() {
             {storage.quota
               ? ` of roughly ${formatBytes(storage.quota)} this browser allows`
               : ""}
-            . Stored in IndexedDB, so a library of many courses fits.
+            .{" "}
+            {isSupabaseConfigured
+              ? "Stored in your Supabase account."
+              : "Stored in this browser (IndexedDB), so a library of many courses fits."}
           </p>
         )}
       </section>
     </div>
   );
+}
+
+/** First occurrence of each id wins, so what is already in the account is kept. */
+function dedupe<T extends { id: string }>(items: T[]): T[] {
+  const seen = new Map<string, T>();
+  for (const item of items) if (!seen.has(item.id)) seen.set(item.id, item);
+  return [...seen.values()];
 }
 
 function formatBytes(bytes: number): string {

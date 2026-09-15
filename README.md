@@ -8,23 +8,38 @@ actually saying) and **step by step** (what to do to set it up). Everything
 keeps its provenance — who made it, which course it came from, the link back to
 the original.
 
-This is the **template stage**: the full interface works, with all data stored
-in your browser. Supabase, accounts, and model-generated study notes come next,
-and the code is laid out so those slot in without a rewrite.
+Runs two ways. With no configuration it stores everything in one browser
+(IndexedDB) with no account — open it and it works. Add two Supabase env vars
+and the same app becomes account-backed and follows you between devices; see
+[docs/supabase-setup.md](docs/supabase-setup.md).
 
 ---
 
 ## The structure
 
 ```
-Faculty          A field you keep returning to      → sidebar
-  └── Course     One body of material, yours or someone else's
-        └── Lesson   One transcript / video / document
+Faculty            A field you keep returning to        → sidebar
+  └── Course       One body of material, yours or someone else's
+        │            grouped by track: "Level 0", "Level 1", "Companion"
+        └── Lesson One transcript / video / document / post
+                     grouped by section: the module inside the course
 ```
 
 A **lesson** always records where it came from: creator, material type, video
 link, link to the original lesson, and the source file name when the text came
 from an upload.
+
+It holds three kinds of text, deliberately kept apart:
+
+| | what it is |
+| --- | --- |
+| **Transcript** | what was said |
+| **Lesson text** | what the author wrote — key points, action item, workbook links |
+| **My notes** | what you thought |
+
+Video embeds when it can (YouTube, Vimeo, Loom). Platforms that block framing
+get a card naming the host, so the video opens in a tab while the transcript and
+your notes stay put.
 
 ## Running it
 
@@ -112,16 +127,23 @@ Two boundaries are deliberate and worth keeping:
 - **`Database` in `lib/types.ts` is the wire shape.** It is what Settings
   exports, and what the Supabase tables should mirror.
 
+## Bringing a course in
+
+`docs/import-format.md` describes a one-course JSON file. Drop files on
+**Settings → Add course files**, several at once.
+
+Importing **merges** — it never wipes. Re-importing a course updates it in
+place, keeping your status and notes while refreshing the source material, so a
+course can be imported as titles first and re-pulled once the transcripts exist.
+`docs/examples/` has a worked file.
+
 ## Next steps
 
-1. **Supabase** — tables for `faculties`, `courses`, `lessons`, `creators`
-   mirroring `lib/types.ts`, then a second `PersistenceAdapter` implementation
-   in `lib/persistence.ts`. Move to per-row mutations rather than saving the
-   whole snapshot once rows are shared.
-2. **Auth and row-level security** — `Creator.isSelf` becomes the signed-in user.
-3. **Model-generated study notes** — replace `analyzeTranscript` with a server
-   route. Cache the result on the lesson (`Lesson.study` already exists) so it is
-   generated once, and keep `engine` so the UI can say which produced it.
-4. **PDF and Word parsing** — a server route that extracts text on upload.
-5. **Ask across a course** — question answering over every transcript in a
-   course, once transcripts live in a database with embeddings.
+1. **Ask across the library** — one question box over every stored transcript
+   and lesson text, answering with the passages and linking back to the lesson.
+   The Postgres full-text index in `supabase/schema.sql` is already in place for
+   it.
+2. **Model-generated study notes** — replace `analyzeTranscript` with a server
+   route. The result is already cached on the lesson (`Lesson.study`) and tagged
+   with which engine produced it.
+3. **PDF and Word parsing** — a server route that extracts text on upload.

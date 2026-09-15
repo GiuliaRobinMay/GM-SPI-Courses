@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LibraryProvider } from "@/lib/store";
 import { AppShell } from "@/components/AppShell";
+import { AuthGate } from "@/components/AuthGate";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,9 +16,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans">
-        <LibraryProvider>
-          <AppShell>{children}</AppShell>
-        </LibraryProvider>
+        <AuthGate>
+          <LibraryProvider>
+            <AppShell>{children}</AppShell>
+          </LibraryProvider>
+        </AuthGate>
       </body>
     </html>
   );

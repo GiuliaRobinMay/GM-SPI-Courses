@@ -1,5 +1,9 @@
 import type { Database } from "./types";
 import { SEED } from "./seed";
+import { isSupabaseConfigured } from "./supabase/client";
+import { createSupabaseAdapter } from "./supabase/adapter";
+
+export { isSupabaseConfigured };
 
 /**
  * The single place the app talks to storage.
@@ -116,7 +120,19 @@ export const indexedDbAdapter: PersistenceAdapter = {
   },
 };
 
-export const persistence: PersistenceAdapter = indexedDbAdapter;
+/**
+ * Supabase when it is configured, the browser's own storage otherwise.
+ *
+ * With no env vars the app is exactly what it was: local, single-device, no
+ * account. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY and
+ * it becomes an account-backed library, without a line of UI changing.
+ */
+export const persistence: PersistenceAdapter = isSupabaseConfigured
+  ? createSupabaseAdapter()
+  : indexedDbAdapter;
+
+/** The local adapter, still reachable so a library can be migrated upward. */
+export const localPersistence = indexedDbAdapter;
 
 /** Bytes the library occupies, and what the browser is willing to give us. */
 export async function storageReport(db: Database): Promise<{
