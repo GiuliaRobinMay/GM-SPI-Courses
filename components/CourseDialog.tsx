@@ -32,6 +32,7 @@ export function CourseDialog({
   const [creatorId, setCreatorId] = useState("cr-self");
   const [sourceUrl, setSourceUrl] = useState("");
   const [topics, setTopics] = useState("");
+  const [track, setTrack] = useState("");
   const [tone, setTone] = useState<AccentToken>("indigo");
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export function CourseDialog({
     setCreatorId(existing?.creatorId ?? db.creators.find((c) => c.isSelf)?.id ?? "cr-self");
     setSourceUrl(existing?.sourceUrl ?? "");
     setTopics(existing?.topics.join(", ") ?? "");
+    setTrack(existing?.track ?? "");
     setTone(existing?.accent ?? "indigo");
   }, [open, existing, facultyId, db.faculties, db.creators]);
 
@@ -61,6 +63,7 @@ export function CourseDialog({
       creatorId,
       sourceUrl: sourceUrl.trim() || undefined,
       topics: topicList,
+      track: track.trim() || undefined,
       accent: tone,
     };
     if (existing) {
@@ -135,6 +138,15 @@ export function CourseDialog({
           <CreatorPicker
             value={creatorId}
             onChange={(id) => setCreatorId(id ?? "cr-self")}
+          />
+        </Field>
+
+        <Field label="Track" hint="Groups courses into a progression, e.g. “Level 1”.">
+          <input
+            className="field"
+            placeholder="Level 1"
+            value={track}
+            onChange={(e) => setTrack(e.target.value)}
           />
         </Field>
 

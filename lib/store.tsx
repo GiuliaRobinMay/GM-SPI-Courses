@@ -19,6 +19,8 @@ import type {
 } from "./types";
 import { analyzeTranscript, estimateMinutes } from "./insights";
 import { emptyDatabase, persistence, seedDatabase } from "./persistence";
+import { mergeAll, type ImportReport } from "./importer";
+import type { CoursePackage } from "./types";
 
 function id(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
@@ -77,6 +79,11 @@ interface LibraryValue {
   regenerateStudy(lessonId: string): void;
 
   addCreator(input: Partial<Creator> & { name: string }): Creator;
+
+  /** Merge course files into the library without removing anything. */
+  importPackages(packages: CoursePackage[]): ImportReport[];
+  /** Replace the whole library — used by the full-library restore. */
+  replaceAll(next: Database): void;
 
   resetToDemo(): void;
   clearAll(): void;
@@ -140,7 +147,10 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     (courseId: string) =>
       db.lessons
         .filter((l) => l.courseId === courseId)
-        .sort((a, b) => a.order - b.order),
+        .sort(
+          (a, b) =>
+            (a.sectionOrder ?? 0) - (b.sectionOrder ?? 0) || a.order - b.order,
+        ),
     [db.lessons],
   );
   const courseProgress = useCallback(
@@ -260,7 +270,10 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       videoUrl: input.videoUrl,
       sourceUrl: input.sourceUrl,
       sourceFileName: input.sourceFileName,
+      section: input.section,
+      sectionOrder: input.sectionOrder,
       transcript,
+      content: input.content,
       notes: input.notes,
       topics: input.topics ?? [],
       durationMinutes:
@@ -331,6 +344,22 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     return created;
   }, []);
 
+  const importPackages: LibraryValue["importPackages"] = useCallback((packages) => {
+    // mergeAll is pure, so the reports are computed here and the state update
+    // just swaps in the result.
+    let reports: ImportReport[] = [];
+    setDb((prev) => {
+      const result = mergeAll(prev, packages);
+      reports = result.reports;
+      return result.db;
+    });
+    return reports;
+  }, []);
+
+  const replaceAll: LibraryValue["replaceAll"] = useCallback((next) => {
+    setDb(withStudyOutput(next));
+  }, []);
+
   const resetToDemo = useCallback(() => setDb(seedDatabase()), []);
   const clearAll = useCallback(
     () => setDb({ ...structuredClone(emptyDatabase), creators: [{ id: "cr-self", name: "You", isSelf: true }] }),
@@ -362,6 +391,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       setLessonStatus,
       regenerateStudy,
       addCreator,
+      importPackages,
+      replaceAll,
       resetToDemo,
       clearAll,
     }),
@@ -370,7 +401,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       lessonsOf, courseProgress, search, addFaculty, updateFaculty,
       removeFaculty, addCourse, updateCourse, removeCourse, addLesson,
       updateLesson, removeLesson, setLessonStatus, regenerateStudy, addCreator,
-      resetToDemo, clearAll,
+      importPackages, replaceAll, resetToDemo, clearAll,
     ],
   );
 

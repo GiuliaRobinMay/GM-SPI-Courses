@@ -13,7 +13,7 @@ import { CourseDialog } from "@/components/CourseDialog";
 import { LessonDialog } from "@/components/LessonDialog";
 import { FacultyIcon } from "@/components/Icon";
 import { EmptyState, Progress, Tag } from "@/components/ui";
-import type { LessonStatus } from "@/lib/types";
+import type { Lesson, LessonStatus } from "@/lib/types";
 
 const FILTERS: { value: LessonStatus | "all"; label: string }[] = [
   { value: "all", label: "All" },
@@ -126,9 +126,26 @@ export default function CoursePage({
           </div>
 
           {visible.length > 0 ? (
-            <div className="space-y-2">
-              {visible.map((l) => (
-                <LessonRow key={l.id} lesson={l} />
+            <div className="space-y-6">
+              {groupBySection(visible).map((group) => (
+                <section key={group.name ?? "__flat"}>
+                  {group.name && (
+                    <div className="mb-2 flex items-baseline gap-2">
+                      <h3 className="text-[13px] font-semibold uppercase tracking-[0.06em] text-slate-500">
+                        {group.name}
+                      </h3>
+                      <span className="text-[12px] tabular-nums text-slate-400">
+                        {group.lessons.length}
+                      </span>
+                      <span className="h-px flex-1 bg-hairline" />
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    {group.lessons.map((l) => (
+                      <LessonRow key={l.id} lesson={l} />
+                    ))}
+                  </div>
+                </section>
               ))}
             </div>
           ) : (
@@ -262,4 +279,20 @@ export default function CoursePage({
       />
     </div>
   );
+}
+
+/**
+ * Lessons in their course order, split into the sections the course defines.
+ * A course with no sections comes back as a single unnamed group, which
+ * renders as a flat list.
+ */
+function groupBySection(lessons: Lesson[]): { name?: string; lessons: Lesson[] }[] {
+  const groups: { name?: string; lessons: Lesson[] }[] = [];
+  for (const lesson of lessons) {
+    const name = lesson.section?.trim() || undefined;
+    const last = groups[groups.length - 1];
+    if (last && last.name === name) last.lessons.push(lesson);
+    else groups.push({ name, lessons: [lesson] });
+  }
+  return groups;
 }

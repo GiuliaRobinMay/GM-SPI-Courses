@@ -16,6 +16,7 @@ const SOURCE_KINDS: { value: SourceKind; label: string }[] = [
   { value: "pdf", label: "PDF" },
   { value: "document", label: "Document" },
   { value: "article", label: "Article" },
+  { value: "post", label: "Community post" },
   { value: "note", label: "My own note" },
 ];
 
@@ -46,7 +47,9 @@ export function LessonDialog({
   const [videoUrl, setVideoUrl] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [topics, setTopics] = useState("");
+  const [section, setSection] = useState("");
   const [transcript, setTranscript] = useState("");
+  const [content, setContent] = useState("");
   const [notes, setNotes] = useState("");
   const [fileName, setFileName] = useState<string | undefined>(undefined);
   const [fileWarning, setFileWarning] = useState<string | null>(null);
@@ -60,7 +63,9 @@ export function LessonDialog({
     setVideoUrl(existing?.videoUrl ?? "");
     setSourceUrl(existing?.sourceUrl ?? "");
     setTopics(existing?.topics.join(", ") ?? "");
+    setSection(existing?.section ?? "");
     setTranscript(existing?.transcript ?? "");
+    setContent(existing?.content ?? "");
     setNotes(existing?.notes ?? "");
     setFileName(existing?.sourceFileName);
     setFileWarning(null);
@@ -99,7 +104,9 @@ export function LessonDialog({
       videoUrl: videoUrl.trim() || undefined,
       sourceUrl: sourceUrl.trim() || undefined,
       sourceFileName: fileName,
+      section: section.trim() || undefined,
       transcript: transcript.trim(),
+      content: content.trim() || undefined,
       notes: notes.trim() || undefined,
       topics: topics.split(",").map((t) => t.trim()).filter(Boolean),
     };
@@ -204,6 +211,15 @@ export function LessonDialog({
           />
         </Field>
 
+        <Field label="Section" hint="The module inside the course. Leave empty for a flat list.">
+          <input
+            className="field"
+            placeholder="1. Find your idea"
+            value={section}
+            onChange={(e) => setSection(e.target.value)}
+          />
+        </Field>
+
         <Field label="Video link" hint="YouTube, Loom, Vimeo — embedded in the player.">
           <input
             className="field"
@@ -266,6 +282,20 @@ export function LessonDialog({
               {fileWarning}
             </p>
           )}
+        </div>
+
+        <div className="sm:col-span-2">
+          <Field
+            label="Lesson text"
+            hint="The written material that came with the lesson — key points, action item, workbook links."
+          >
+            <textarea
+              className="field min-h-[110px] resize-y leading-relaxed"
+              placeholder="Key points, the action item, links to the workbook…"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+            />
+          </Field>
         </div>
 
         <div className="sm:col-span-2">

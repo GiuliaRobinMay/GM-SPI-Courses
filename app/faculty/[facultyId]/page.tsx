@@ -11,6 +11,7 @@ import { CourseDialog } from "@/components/CourseDialog";
 import { FacultyDialog } from "@/components/FacultyDialog";
 import { FacultyIcon } from "@/components/Icon";
 import { EmptyState } from "@/components/ui";
+import type { Course } from "@/lib/types";
 
 export default function FacultyPage({
   params,
@@ -94,9 +95,21 @@ export default function FacultyPage({
       </header>
 
       {courses.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {courses.map((c) => (
-            <CourseCard key={c.id} course={c} />
+        <div className="space-y-8">
+          {groupByTrack(courses).map((group) => (
+            <section key={group.name}>
+              <div className="mb-3 flex items-baseline gap-2">
+                <h2 className="section-title">{group.name}</h2>
+                <span className="text-[13px] tabular-nums text-slate-400">
+                  {group.courses.length}
+                </span>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {group.courses.map((c) => (
+                  <CourseCard key={c.id} course={c} />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       ) : (
@@ -124,4 +137,32 @@ export default function FacultyPage({
       />
     </div>
   );
+}
+
+/**
+ * Courses arranged by the track they sit in — "Level 0", "Level 1",
+ * "Companion" — so a programme's progression reads top to bottom. Courses
+ * with no track collect under "Courses" at the end.
+ */
+function groupByTrack(courses: Course[]): { name: string; courses: Course[] }[] {
+  const groups = new Map<string, { name: string; order: number; courses: Course[] }>();
+
+  for (const course of courses) {
+    const name = course.track?.trim() || "Courses";
+    // Untracked courses sort last; otherwise the file's own trackOrder decides.
+    const order = course.track?.trim()
+      ? (course.trackOrder ?? 500)
+      : Number.MAX_SAFE_INTEGER;
+    const group = groups.get(name);
+    if (group) {
+      group.courses.push(course);
+      group.order = Math.min(group.order, order);
+    } else {
+      groups.set(name, { name, order, courses: [course] });
+    }
+  }
+
+  return [...groups.values()]
+    .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
+    .map(({ name, courses }) => ({ name, courses }));
 }

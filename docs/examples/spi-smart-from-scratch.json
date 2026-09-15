@@ -1,0 +1,75 @@
+{
+  "format": "studiolo.course",
+  "version": 1,
+  "faculty": {
+    "name": "Smart Passive Income",
+    "icon": "cap",
+    "accent": "emerald",
+    "description": "Courses and paths from the SPI community."
+  },
+  "creator": {
+    "name": "Pat Flynn",
+    "handle": "@patflynn",
+    "url": "https://smartpassiveincome.com"
+  },
+  "course": {
+    "externalId": "spi-smart-from-scratch",
+    "title": "Smart From Scratch",
+    "subtitle": "Validate an idea before you build anything",
+    "description": "Test whether a business idea has real demand, by talking to people rather than guessing.",
+    "sourceUrl": "https://community.smartpassiveincome.com/c/smart-from-scratch",
+    "topics": ["validation", "audience research"],
+    "track": "Level 0",
+    "trackOrder": 0
+  },
+  "lessons": [
+    {
+      "externalId": "spi-sfs-s1-l1",
+      "title": "Why most ideas fail before they start",
+      "section": "1. Start with the problem",
+      "sectionOrder": 1,
+      "order": 0,
+      "sourceKind": "transcript",
+      "videoUrl": "https://community.smartpassiveincome.com/c/smart-from-scratch/lesson-1",
+      "sourceUrl": "https://community.smartpassiveincome.com/c/smart-from-scratch/lesson-1",
+      "durationMinutes": 11,
+      "topics": ["validation"],
+      "transcript": "The reason most businesses fail is not the product, it is that nobody checked whether the problem was real before building the solution. The key is to fall in love with a problem, not with your idea of the fix.\n\nStart by writing down the problem in one sentence, without naming your solution. Then read it back and ask whether a stranger would recognise themselves in it.\n\nNext, go and find ten people who have that problem right now. Never build before you have spoken to ten people, because the first three will tell you what you want to hear.\n\nMake sure you write down their exact words. The phrases people use to describe their own problem become your sales page later.",
+      "content": "Key points\n- Fall in love with the problem, not the solution.\n- A problem statement that names your product is not a problem statement.\n- Ten conversations is the minimum before building.\n\nAction item\nWrite your problem in one sentence and send it to three people outside your industry. Note where they hesitate.\n\nWorkbook\nSection 1, pages 2 to 4."
+    },
+    {
+      "externalId": "spi-sfs-s1-l2",
+      "title": "The one-sentence problem statement",
+      "section": "1. Start with the problem",
+      "sectionOrder": 1,
+      "order": 1,
+      "sourceKind": "document",
+      "sourceUrl": "https://community.smartpassiveincome.com/c/smart-from-scratch/lesson-2",
+      "topics": ["positioning"],
+      "content": "A written exercise with no video.\n\nThe format: [specific person] struggles to [specific outcome] because [obstacle].\n\nThe test: read it to someone in the target group. If they ask a clarifying question, it is still too abstract. If they say \"that's me\", it is finished.\n\nAction item\nWrite five versions. Keep the one that needs the least explaining."
+    },
+    {
+      "externalId": "spi-sfs-s2-l1",
+      "title": "Running a validation conversation",
+      "section": "2. Talk to people",
+      "sectionOrder": 2,
+      "order": 0,
+      "sourceKind": "transcript",
+      "sourceUrl": "https://community.smartpassiveincome.com/c/smart-from-scratch/lesson-3",
+      "durationMinutes": 16,
+      "topics": ["interviews"],
+      "transcript": "The mistake is to pitch during a validation call. The point is to learn, and the moment you pitch, people stop telling you the truth.\n\nStart by asking them to walk you through the last time they hit the problem. Then stay quiet and let them talk for a full minute.\n\nNext, ask what they tried already and what it cost them. Never ask whether they would buy something, because people are polite about hypotheticals and honest about their past.\n\nFinally, ask who else you should speak to. Always close with that question, because it is how ten conversations become thirty."
+    },
+    {
+      "externalId": "spi-sfs-post-1",
+      "title": "Community thread: share your problem statement",
+      "section": "2. Talk to people",
+      "sectionOrder": 2,
+      "order": 1,
+      "sourceKind": "post",
+      "sourceUrl": "https://community.smartpassiveincome.com/c/smart-from-scratch/thread-42",
+      "topics": ["community"],
+      "content": "A community post rather than a lesson — this is how a path made of posts is filed.\n\nPost your one-sentence problem statement in the thread and give feedback to two other people. The most useful feedback names the word that made you hesitate."
+    }
+  ]
+}

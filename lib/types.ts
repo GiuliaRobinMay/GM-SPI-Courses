@@ -17,6 +17,7 @@ export type SourceKind =
   | "pdf"
   | "document"
   | "article"
+  | "post"
   | "note";
 
 export interface Creator {
@@ -53,6 +54,17 @@ export interface Course {
   /** Free-form topics used for filtering and search */
   topics: string[];
   accent: AccentToken;
+
+  /**
+   * Where this course sits in a progression — "Level 0", "Level 2",
+   * "Companion", "Onboarding". Courses are grouped under their track on the
+   * faculty page, so a programme's trajectory is visible at a glance.
+   * Leave empty for standalone courses; they fall under "Courses".
+   */
+  track?: string;
+  /** Sort position of the track itself. Lower comes first. */
+  trackOrder?: number;
+
   createdAt: string;
   updatedAt: string;
   /** Pinned to the top of the collection */
@@ -77,8 +89,23 @@ export interface Lesson {
   /** Original file name when the transcript came from a PDF/Word upload */
   sourceFileName?: string;
 
+  /**
+   * The module this lesson belongs to inside its course ("1. Find your
+   * idea"). Lessons are grouped by section, in sectionOrder, on the course
+   * page. Empty means the course is a flat list.
+   */
+  section?: string;
+  /** Sort position of the section itself. Lower comes first. */
+  sectionOrder?: number;
+
   /** The main payload: the raw transcript or pasted document text */
   transcript: string;
+  /**
+   * The written material that came with the lesson — key points, the action
+   * item, workbook links. This is the author's text, so it is kept apart from
+   * both the transcript and your own notes.
+   */
+  content?: string;
   /** Your own notes, kept separate from the source material */
   notes?: string;
 
@@ -137,4 +164,56 @@ export interface Database {
   faculties: Faculty[];
   courses: Course[];
   lessons: Lesson[];
+}
+
+/* ------------------------------------------------------------------ */
+/* Import format — see docs/import-format.md                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * One course and its lessons, as a file that can be merged into a library
+ * without disturbing what is already there. This is what a scraper or an
+ * assistant writes when it lifts a course out of another platform.
+ */
+export interface CoursePackage {
+  format: "studiolo.course";
+  version: 1;
+  /** Created if absent, matched by name if present. */
+  faculty?: {
+    name: string;
+    icon?: string;
+    accent?: AccentToken;
+    description?: string;
+  };
+  creator?: {
+    name: string;
+    handle?: string;
+    url?: string;
+  };
+  course: {
+    /** Stable id from the source platform, used to recognise re-imports. */
+    externalId?: string;
+    title: string;
+    subtitle?: string;
+    description?: string;
+    sourceUrl?: string;
+    topics?: string[];
+    accent?: AccentToken;
+    track?: string;
+    trackOrder?: number;
+  };
+  lessons: {
+    externalId?: string;
+    title: string;
+    section?: string;
+    sectionOrder?: number;
+    order?: number;
+    sourceKind?: SourceKind;
+    videoUrl?: string;
+    sourceUrl?: string;
+    transcript?: string;
+    content?: string;
+    topics?: string[];
+    durationMinutes?: number;
+  }[];
 }

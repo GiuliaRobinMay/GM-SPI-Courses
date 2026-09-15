@@ -4,20 +4,21 @@ import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Check, Copy, ExternalLink, FileText, Link2, ListChecks,
-  Pencil, RefreshCw, Sparkles, Trash2, Wand2,
+  ArrowLeft, BookOpen, Check, Copy, ExternalLink, FileText, ListChecks,
+  Pencil, PlayCircle, RefreshCw, Sparkles, Trash2, Wand2,
 } from "lucide-react";
 import { useLibrary } from "@/lib/store";
 import { youtubeId, wordCount } from "@/lib/transcript";
 import { LessonDialog } from "@/components/LessonDialog";
 import { EmptyState, Tag } from "@/components/ui";
-import type { LessonStatus } from "@/lib/types";
+import type { Lesson, LessonStatus } from "@/lib/types";
 
-type Tab = "highlights" | "steps" | "transcript" | "notes";
+type Tab = "highlights" | "steps" | "lesson" | "transcript" | "notes";
 
 const TABS: { value: Tab; label: string; icon: typeof Sparkles }[] = [
   { value: "highlights", label: "Highlights", icon: Sparkles },
   { value: "steps", label: "Step by step", icon: ListChecks },
+  { value: "lesson", label: "Lesson text", icon: BookOpen },
   { value: "transcript", label: "Transcript", icon: FileText },
   { value: "notes", label: "My notes", icon: Pencil },
 ];
@@ -53,7 +54,10 @@ export default function LessonPage({
   useEffect(() => {
     setNotes(item?.notes ?? "");
     setChecked(new Set());
-  }, [item?.id, item?.notes]);
+    // A post with written text and no transcript should open on that text,
+    // not on an empty Highlights tab.
+    if (item) setTab(availableTabs(item)[0]);
+  }, [item?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const vid = useMemo(() => youtubeId(item?.videoUrl), [item?.videoUrl]);
 
@@ -135,20 +139,11 @@ export default function LessonPage({
               />
             </div>
           ) : item.videoUrl ? (
-            <a
-              href={item.videoUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="card card-hover flex items-center gap-3 p-4 text-[14px] text-slate-700"
-            >
-              <Link2 className="size-4 text-slate-400" />
-              Open the video in a new tab
-              <ExternalLink className="ml-auto size-4 text-slate-400" />
-            </a>
+            <ExternalVideoCard url={item.videoUrl} />
           ) : null}
 
           <div className="flex flex-wrap items-center gap-2 border-b border-hairline pb-3">
-            {TABS.map((t) => (
+            {TABS.filter((t) => availableTabs(item).includes(t.value)).map((t) => (
               <button
                 key={t.value}
                 onClick={() => setTab(t.value)}
@@ -160,7 +155,7 @@ export default function LessonPage({
             ))}
           </div>
 
-          {!item.transcript && tab !== "notes" && (
+          {!item.transcript && !item.content && tab !== "notes" && (
             <EmptyState
               icon={<Wand2 className="size-5" />}
               title="No transcript on this lesson yet"
@@ -361,6 +356,37 @@ export default function LessonPage({
             </section>
           )}
 
+          {tab === "lesson" && item.content && (
+            <section className="card p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-slate-900">Lesson text</p>
+                  <p className="muted mt-0.5">
+                    The written material that came with the lesson.
+                  </p>
+                </div>
+                <button
+                  className="btn-quiet px-2 py-1 text-[13px]"
+                  onClick={() => copy(item.content ?? "", "content")}
+                >
+                  {copied === "content" ? (
+                    <Check className="size-3.5" />
+                  ) : (
+                    <Copy className="size-3.5" />
+                  )}
+                  Copy
+                </button>
+              </div>
+              <div className="space-y-4">
+                {item.content.split(/\n{2,}/).map((para, i) => (
+                  <p key={i} className="text-[14px] leading-[1.75] text-slate-700">
+                    {para}
+                  </p>
+                ))}
+              </div>
+            </section>
+          )}
+
           {item.transcript && tab === "transcript" && (
             <section className="card p-6">
               <div className="mb-4 flex items-center justify-between">
@@ -524,6 +550,54 @@ export default function LessonPage({
         lessonId={item.id}
       />
     </div>
+  );
+}
+
+/**
+ * Which tabs this lesson can actually fill. Highlights, steps and the
+ * transcript all need a transcript; the lesson text needs written material.
+ * Notes are always offered.
+ */
+function availableTabs(lesson: Lesson): Tab[] {
+  const tabs: Tab[] = [];
+  if (lesson.transcript) tabs.push("highlights", "steps");
+  if (lesson.content) tabs.push("lesson");
+  if (lesson.transcript) tabs.push("transcript");
+  tabs.push("notes");
+  return tabs;
+}
+
+/**
+ * Video that will not embed — a course platform that blocks framing, for
+ * instance. Naming the host makes it obvious where the click goes.
+ */
+function ExternalVideoCard({ url }: { url: string }) {
+  let host = "the original site";
+  try {
+    host = new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    // A malformed URL still gets a working link, just a generic label.
+  }
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      className="card card-hover flex items-center gap-4 p-5"
+    >
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+        <PlayCircle className="size-5" />
+      </span>
+      <div className="min-w-0">
+        <p className="font-medium text-slate-900">Watch on {host}</p>
+        <p className="muted mt-0.5">
+          This video can&apos;t play inside Studiolo — your notes and transcript
+          stay here while it opens in a new tab.
+        </p>
+      </div>
+      <ExternalLink className="ml-auto size-4 shrink-0 text-slate-400" />
+    </a>
   );
 }
 
