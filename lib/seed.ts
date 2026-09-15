@@ -32,6 +32,8 @@ export const SEED: Database = {
       sourceUrl: "https://youtube.com/@rileybrownai",
       topics: ["agents", "automation", "prompting"],
       accent: "indigo",
+      track: "Level 1 — Foundations",
+      trackOrder: 1,
       createdAt: now,
       updatedAt: now,
       favorite: true,
@@ -46,6 +48,8 @@ export const SEED: Database = {
       sourceUrl: "https://youtube.com/@futurepedia",
       topics: ["video", "midjourney", "editing"],
       accent: "rose",
+      track: "Companion",
+      trackOrder: 9,
       createdAt: now,
       updatedAt: now,
     },
@@ -58,6 +62,8 @@ export const SEED: Database = {
       creatorId: "cr-self",
       topics: ["positioning", "pricing", "sales"],
       accent: "emerald",
+      track: "Level 2 — Build the offer",
+      trackOrder: 2,
       createdAt: now,
       updatedAt: now,
       favorite: true,
@@ -83,6 +89,8 @@ export const SEED: Database = {
       creatorId: "cr-riley",
       order: 0,
       status: "done",
+      section: "1. Draw the boundary",
+      sectionOrder: 1,
       sourceKind: "transcript",
       videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
       sourceUrl: "https://youtube.com/@rileybrownai",
@@ -101,6 +109,16 @@ Then create a small test set. Take ten real examples from last month and run the
 After that, add logging. Save every input and output to a table in Supabase or even a Google Sheet, and review it once a week. The trick is that reviewing twenty real runs teaches you more than a week of prompt tweaking.
 
 Finally, set a hard stop. Give the agent a maximum number of steps and a budget, and make it hand back to a human when it exceeds either. Remember that the value is not full autonomy, it is a loop that a person can trust and check.`,
+      content: `Key points
+- An agent is only as reliable as the boundary drawn around it.
+- More than four tools in scope means the scope is wrong.
+- Write the failure cases before the happy path.
+
+Action item
+Take one task you repeat weekly. Write the brief you would hand a new starter, then list every tool it touches. If the list runs past four, split the task and start again.
+
+Workbook
+Section 2, pages 11 to 14.`,
       notes: "Use this framing for the client onboarding bot.",
     },
     {
@@ -108,8 +126,10 @@ Finally, set a hard stop. Give the agent a maximum number of steps and a budget,
       courseId: "co-agents",
       title: "Giving an agent tools without giving it the keys",
       creatorId: "cr-riley",
-      order: 1,
+      order: 0,
       status: "studying",
+      section: "2. Hand over the tools",
+      sectionOrder: 2,
       sourceKind: "transcript",
       topics: ["agents", "security"],
       createdAt: now,
@@ -130,7 +150,9 @@ Make sure every destructive action is confirmed by a human. Never let an agent d
       order: 0,
       status: "todo",
       sourceKind: "video",
-      videoUrl: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+      // Deliberately not YouTube: shows the link-out card a course platform gets.
+      videoUrl: "https://vimeo.example.com/course/animation-tools",
+      sourceUrl: "https://futurepedia.example/lesson/animation-tools",
       topics: ["video", "animation"],
       durationMinutes: 12,
       createdAt: now,
@@ -148,6 +170,13 @@ Make sure every destructive action is confirmed by a human. Never let an agent d
       topics: ["positioning"],
       createdAt: now,
       updatedAt: now,
+      content: `Key points
+- Price is rarely the problem. A promise the buyer cannot repeat back is.
+- The words your buyer uses are the words your page should use.
+- The sentence where a call goes quiet is where the promise stopped being concrete.
+
+Action item
+Read your sales page aloud to someone outside your industry and write down how they describe what you sell.`,
       transcript: `The reason most offers do not convert is not the price, it is that the buyer cannot repeat the promise back to you in one sentence.
 
 Start by reading your sales page out loud to someone outside your industry. Then ask them to explain what you sell. Write down the exact words they use.

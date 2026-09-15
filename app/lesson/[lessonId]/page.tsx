@@ -379,7 +379,10 @@ export default function LessonPage({
               </div>
               <div className="space-y-4">
                 {item.content.split(/\n{2,}/).map((para, i) => (
-                  <p key={i} className="text-[14px] leading-[1.75] text-slate-700">
+                  <p
+                    key={i}
+                    className="whitespace-pre-line text-[14px] leading-[1.75] text-slate-700"
+                  >
                     {para}
                   </p>
                 ))}
