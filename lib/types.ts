@@ -11,6 +11,9 @@
 
 export type LessonStatus = "todo" | "studying" | "done";
 
+/** How urgently you want to get to something. Drives the study plan order. */
+export type Priority = "high" | "normal" | "low";
+
 export type SourceKind =
   | "transcript"
   | "video"
@@ -67,6 +70,11 @@ export interface Course {
   /** Sort position of the track itself. Lower comes first. */
   trackOrder?: number;
 
+  /** Set to put this course on the study plan. Absent means not planned. */
+  priority?: Priority;
+  /** The day you mean to work on it, as yyyy-mm-dd. */
+  plannedFor?: string;
+
   createdAt: string;
   updatedAt: string;
   /** Pinned to the top of the collection */
@@ -81,6 +89,11 @@ export interface Lesson {
   creatorId?: string;
   order: number;
   status: LessonStatus;
+
+  /** Set to put this lesson on the study plan. Absent means not planned. */
+  priority?: Priority;
+  /** The day you mean to study it, as yyyy-mm-dd. */
+  plannedFor?: string;
 
   /** Provenance — always keep track of where material came from */
   sourceKind: SourceKind;

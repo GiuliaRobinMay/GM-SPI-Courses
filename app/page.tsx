@@ -6,6 +6,7 @@ import { useLibrary } from "@/lib/store";
 import { CourseCard, LessonRow } from "@/components/cards";
 import { CourseDialog } from "@/components/CourseDialog";
 import { LessonDialog } from "@/components/LessonDialog";
+import { StudyPlan } from "@/components/StudyPlan";
 import { EmptyState } from "@/components/ui";
 import type { Course } from "@/lib/types";
 
@@ -49,6 +50,16 @@ export default function DiscoverPage() {
           {db.lessons.filter((l) => l.status === "done").length} completed
         </p>
       </div>
+
+      <section>
+        <div className="mb-3">
+          <h2 className="section-title">Your study plan</h2>
+          <p className="muted">
+            What you decided to do next, highest priority first.
+          </p>
+        </div>
+        <StudyPlan />
+      </section>
 
       {inProgress.length > 0 && (
         <section>

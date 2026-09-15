@@ -10,6 +10,7 @@ import { useLibrary } from "@/lib/store";
 import { accent } from "@/lib/theme";
 import { LessonRow } from "@/components/cards";
 import { CourseDialog } from "@/components/CourseDialog";
+import { PlanControls } from "@/components/PlanControls";
 import { LessonDialog } from "@/components/LessonDialog";
 import { FacultyIcon } from "@/components/Icon";
 import { EmptyState, Progress, Tag } from "@/components/ui";
@@ -181,6 +182,15 @@ export default function CoursePage({
             <div className="mt-3">
               <Progress done={progress.done} total={progress.total} />
             </div>
+          </div>
+
+          <div className="card p-5">
+            <PlanControls
+              priority={item.priority}
+              plannedFor={item.plannedFor}
+              onPriority={(priority) => updateCourse(item.id, { priority })}
+              onPlannedFor={(plannedFor) => updateCourse(item.id, { plannedFor })}
+            />
           </div>
 
           <div className="card space-y-3 p-5">

@@ -10,6 +10,7 @@ import {
 import { useLibrary } from "@/lib/store";
 import { youtubeId, wordCount } from "@/lib/transcript";
 import { LessonDialog } from "@/components/LessonDialog";
+import { PlanControls } from "@/components/PlanControls";
 import { EmptyState, Tag } from "@/components/ui";
 import type { Lesson, LessonStatus } from "@/lib/types";
 
@@ -456,6 +457,15 @@ export default function LessonPage({
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="card p-5">
+            <PlanControls
+              priority={item.priority}
+              plannedFor={item.plannedFor}
+              onPriority={(priority) => updateLesson(item.id, { priority })}
+              onPlannedFor={(plannedFor) => updateLesson(item.id, { plannedFor })}
+            />
           </div>
 
           <div className="card space-y-3 p-5 text-[13px]">
