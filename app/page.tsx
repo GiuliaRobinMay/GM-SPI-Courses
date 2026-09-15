@@ -1,41 +1,39 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
-import { ArrowRight, GraduationCap, Plus } from "lucide-react";
+import { GraduationCap, Plus } from "lucide-react";
 import { useLibrary } from "@/lib/store";
-import { CourseCard, FacultyCard, LessonRow } from "@/components/cards";
-import { FacultyDialog } from "@/components/FacultyDialog";
+import { CourseCard, LessonRow } from "@/components/cards";
+import { CourseDialog } from "@/components/CourseDialog";
 import { LessonDialog } from "@/components/LessonDialog";
 import { EmptyState } from "@/components/ui";
+import type { Course } from "@/lib/types";
 
 export default function DiscoverPage() {
   const { db } = useLibrary();
-  const [facultyOpen, setFacultyOpen] = useState(false);
+  const [courseOpen, setCourseOpen] = useState(false);
   const [lessonOpen, setLessonOpen] = useState(false);
 
-  const faculties = [...db.faculties].sort((a, b) => a.order - b.order);
   const inProgress = db.lessons.filter((l) => l.status === "studying").slice(0, 4);
   const recent = [...db.lessons]
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
     .slice(0, 5);
-  const pinned = db.courses.filter((c) => c.favorite);
 
-  if (db.faculties.length === 0) {
+  if (db.courses.length === 0) {
     return (
       <>
         <EmptyState
           icon={<GraduationCap className="size-5" />}
-          title="Your university is empty"
-          body="Start with a faculty — a field you keep coming back to. Courses and lessons live inside it."
+          title="No courses yet"
+          body="A course is one body of material — an SPI course, a YouTube series, or something you recorded yourself."
           action={
-            <button className="btn-primary" onClick={() => setFacultyOpen(true)}>
+            <button className="btn-primary" onClick={() => setCourseOpen(true)}>
               <Plus className="size-4" />
-              Create your first faculty
+              Create your first course
             </button>
           }
         />
-        <FacultyDialog open={facultyOpen} onClose={() => setFacultyOpen(false)} />
+        <CourseDialog open={courseOpen} onClose={() => setCourseOpen(false)} />
       </>
     );
   }
@@ -71,40 +69,36 @@ export default function DiscoverPage() {
       <section>
         <div className="mb-3 flex items-end justify-between">
           <div>
-            <h2 className="section-title">Faculties</h2>
-            <p className="muted">Your fields of study.</p>
+            <h2 className="section-title">Your courses</h2>
+            <p className="muted">Grouped by where they sit in the path.</p>
           </div>
-          <button className="btn-quiet text-[13px]" onClick={() => setFacultyOpen(true)}>
+          <button className="btn-quiet text-[13px]" onClick={() => setCourseOpen(true)}>
             <Plus className="size-4" />
-            New faculty
+            New course
           </button>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {faculties.map((f) => (
-            <FacultyCard key={f.id} faculty={f} />
+        <div className="space-y-7">
+          {groupByTrack(db.courses).map((group) => (
+            <div key={group.name}>
+              <div className="mb-2.5 flex items-baseline gap-2">
+                <h3 className="text-[13px] font-semibold uppercase tracking-[0.06em] text-slate-500">
+                  {group.name}
+                </h3>
+                <span className="text-[12px] tabular-nums text-slate-400">
+                  {group.courses.length}
+                </span>
+                <span className="h-px flex-1 bg-hairline" />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {group.courses.map((c) => (
+                  <CourseCard key={c.id} course={c} />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </section>
 
-      {pinned.length > 0 && (
-        <section>
-          <div className="mb-3 flex items-end justify-between">
-            <div>
-              <h2 className="section-title">Pinned courses</h2>
-              <p className="muted">The ones you keep open.</p>
-            </div>
-            <Link href="/library" className="btn-quiet text-[13px]">
-              View all
-              <ArrowRight className="size-3.5" />
-            </Link>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {pinned.map((c) => (
-              <CourseCard key={c.id} course={c} />
-            ))}
-          </div>
-        </section>
-      )}
 
       <section>
         <div className="mb-3 flex items-end justify-between">
@@ -137,8 +131,32 @@ export default function DiscoverPage() {
         )}
       </section>
 
-      <FacultyDialog open={facultyOpen} onClose={() => setFacultyOpen(false)} />
+      <CourseDialog open={courseOpen} onClose={() => setCourseOpen(false)} />
       <LessonDialog open={lessonOpen} onClose={() => setLessonOpen(false)} />
     </div>
   );
+}
+
+/** Courses arranged by the track they sit in; untracked ones collect last. */
+function groupByTrack(courses: Course[]): { name: string; courses: Course[] }[] {
+  const groups = new Map<string, { name: string; order: number; courses: Course[] }>();
+  for (const course of courses) {
+    const name = course.track?.trim() || "Courses";
+    const order = course.track?.trim()
+      ? (course.trackOrder ?? 500)
+      : Number.MAX_SAFE_INTEGER;
+    const group = groups.get(name);
+    if (group) {
+      group.courses.push(course);
+      group.order = Math.min(group.order, order);
+    } else {
+      groups.set(name, { name, order, courses: [course] });
+    }
+  }
+  return [...groups.values()]
+    .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
+    .map(({ name, courses }) => ({
+      name,
+      courses: [...courses].sort((a, b) => a.title.localeCompare(b.title)),
+    }));
 }

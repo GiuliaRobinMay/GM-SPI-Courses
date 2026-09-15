@@ -3,28 +3,23 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import {
-  Compass, Library, Plus, Settings, Users, PanelLeftClose, PanelLeft,
-} from "lucide-react";
+import { PanelLeft, PanelLeftClose, Plus, Settings } from "lucide-react";
 import { useLibrary } from "@/lib/store";
 import { accent } from "@/lib/theme";
-import { FacultyIcon } from "./Icon";
-import { FacultyDialog } from "./FacultyDialog";
+import { CourseDialog } from "./CourseDialog";
 
-const NAV = [
-  { href: "/", label: "Discover", icon: Compass },
-  { href: "/library", label: "Library", icon: Library },
-  { href: "/creators", label: "Creators", icon: Users },
-  { href: "/settings", label: "Settings", icon: Settings },
-];
-
+/**
+ * Studiolo at the top, every course in the middle, settings and you at the
+ * bottom. The course list is the navigation — there is nothing above it.
+ */
 export function Sidebar() {
   const pathname = usePathname();
-  const { db, coursesOf } = useLibrary();
+  const { db, lessonsOf } = useLibrary();
   const [collapsed, setCollapsed] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const faculties = [...db.faculties].sort((a, b) => a.order - b.order);
+  const courses = [...db.courses].sort((a, b) => a.title.localeCompare(b.title));
+  const you = db.creators.find((c) => c.isSelf);
 
   return (
     <aside
@@ -52,38 +47,16 @@ export function Sidebar() {
         </button>
       </div>
 
-      <nav className="flex flex-col gap-0.5 px-3">
-        {NAV.map((item) => {
-          const active =
-            item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              title={collapsed ? item.label : undefined}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                active
-                  ? "bg-slate-100 text-slate-900"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`}
-            >
-              <item.icon className="size-[18px] shrink-0" strokeWidth={1.8} />
-              {!collapsed && <span className="truncate">{item.label}</span>}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="mt-6 flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col">
         {!collapsed && (
-          <div className="flex items-center justify-between px-6 pb-2">
+          <div className="flex items-center justify-between px-6 pb-2 pt-2">
             <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-              Faculties
+              Courses
             </span>
             <button
               onClick={() => setDialogOpen(true)}
               className="btn-quiet px-1 py-1"
-              aria-label="New faculty"
+              aria-label="New course"
             >
               <Plus className="size-4" />
             </button>
@@ -91,32 +64,33 @@ export function Sidebar() {
         )}
 
         <div className="flex flex-col gap-0.5 overflow-y-auto px-3 pb-4">
-          {faculties.map((f) => {
-            const a = accent(f.accent);
-            const active = pathname === `/faculty/${f.id}`;
-            const count = coursesOf(f.id).length;
+          {courses.map((course) => {
+            const tone = accent(course.accent);
+            const active = pathname === `/course/${course.id}`;
+            const count = lessonsOf(course.id).length;
             return (
               <Link
-                key={f.id}
-                href={`/faculty/${f.id}`}
-                title={collapsed ? f.name : undefined}
-                className={`group flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
+                key={course.id}
+                href={`/course/${course.id}`}
+                title={collapsed ? course.title : undefined}
+                className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
                   active
                     ? "bg-slate-100 font-medium text-slate-900"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
                 <span
-                  className={`flex size-7 shrink-0 items-center justify-center rounded-lg ${a.soft} ${a.softText}`}
-                >
-                  <FacultyIcon name={f.icon} className="size-4" />
-                </span>
+                  className={`size-2.5 shrink-0 rounded-full ${tone.solid}`}
+                  aria-hidden
+                />
                 {!collapsed && (
                   <>
-                    <span className="truncate">{f.name}</span>
-                    <span className="ml-auto text-[12px] tabular-nums text-slate-400">
-                      {count}
-                    </span>
+                    <span className="truncate">{course.title}</span>
+                    {count > 0 && (
+                      <span className="ml-auto text-[12px] tabular-nums text-slate-400">
+                        {count}
+                      </span>
+                    )}
                   </>
                 )}
               </Link>
@@ -127,7 +101,7 @@ export function Sidebar() {
             <button
               onClick={() => setDialogOpen(true)}
               className="mx-auto mt-1 flex size-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-900"
-              aria-label="New faculty"
+              aria-label="New course"
             >
               <Plus className="size-4" />
             </button>
@@ -136,14 +110,27 @@ export function Sidebar() {
       </div>
 
       <div className="mt-auto border-t border-hairline px-3 py-3">
-        <div className="flex items-center gap-3 rounded-xl px-2 py-1.5">
+        <Link
+          href="/settings"
+          title={collapsed ? "Settings" : undefined}
+          className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+            pathname.startsWith("/settings")
+              ? "bg-slate-100 text-slate-900"
+              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          }`}
+        >
+          <Settings className="size-[18px] shrink-0" strokeWidth={1.8} />
+          {!collapsed && <span>Settings</span>}
+        </Link>
+
+        <div className="mt-1 flex items-center gap-3 rounded-xl px-3 py-2">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[12px] font-semibold text-indigo-700">
-            {(db.creators.find((c) => c.isSelf)?.name ?? "You").slice(0, 2)}
+            {(you?.name ?? "You").slice(0, 2)}
           </span>
           {!collapsed && (
             <div className="min-w-0">
               <p className="truncate text-[13px] font-medium text-slate-900">
-                {db.creators.find((c) => c.isSelf)?.name ?? "You"}
+                {you?.name ?? "You"}
               </p>
               <p className="truncate text-[12px] text-slate-400">
                 {db.lessons.length} lessons stored
@@ -153,7 +140,7 @@ export function Sidebar() {
         </div>
       </div>
 
-      <FacultyDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+      <CourseDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
     </aside>
   );
 }
