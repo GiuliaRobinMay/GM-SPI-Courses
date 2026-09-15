@@ -63,6 +63,7 @@ const courses: Course[] = SPI.map((spec) => ({
 
 export const SEED: Database = {
   version: 1,
+  starterVersion: 1,
   creators: [
     { id: "cr-self", name: "Giulia", isSelf: true },
     {
@@ -85,3 +86,48 @@ export const SEED: Database = {
   courses,
   lessons: [],
 };
+
+/**
+ * The edition of the list above. Raise it after changing the courses and
+ * every existing library picks up the additions once, on next load.
+ */
+export const STARTER_VERSION = 1;
+
+/**
+ * Put the starter courses into a library, skipping anything already there.
+ *
+ * New course lists otherwise never reach anyone who has used the app before:
+ * stored data wins over a seed, so the only way to see them was to wipe
+ * everything first. This merges instead — no lesson, note or status is
+ * touched, and a course deleted on purpose stays deleted, because the
+ * library records that it has already been given this edition.
+ */
+export function withStarterCourses(db: Database): {
+  db: Database;
+  added: number;
+} {
+  if (db.starterVersion === STARTER_VERSION) return { db, added: 0 };
+
+  const starter = SEED;
+  const courseIds = new Set(db.courses.map((c) => c.id));
+  const facultyIds = new Set(db.faculties.map((f) => f.id));
+  const creatorIds = new Set(db.creators.map((c) => c.id));
+  const newCourses = starter.courses.filter((c) => !courseIds.has(c.id));
+
+  return {
+    added: newCourses.length,
+    db: {
+      ...db,
+      starterVersion: STARTER_VERSION,
+      faculties: [
+        ...db.faculties,
+        ...starter.faculties.filter((f) => !facultyIds.has(f.id)),
+      ],
+      creators: [
+        ...db.creators,
+        ...starter.creators.filter((c) => !creatorIds.has(c.id)),
+      ],
+      courses: [...db.courses, ...newCourses],
+    },
+  };
+}

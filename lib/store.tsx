@@ -19,6 +19,7 @@ import type {
 } from "./types";
 import { analyzeTranscript, estimateMinutes } from "./insights";
 import { emptyDatabase, persistence, seedDatabase } from "./persistence";
+import { STARTER_VERSION, withStarterCourses } from "./seed";
 import { mergeAll, type ImportReport } from "./importer";
 import type { CoursePackage } from "./types";
 
@@ -102,7 +103,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     persistence.load().then((loaded) => {
       if (cancelled) return;
-      setDb(withStudyOutput(loaded ?? seedDatabase()));
+      setDb(withStarterCourses(withStudyOutput(loaded ?? seedDatabase())).db);
       hydrated.current = true;
       setReady(true);
     });
@@ -367,33 +368,25 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
    * so running it twice adds nothing the second time and no lesson is touched.
    */
   const addStarterCourses: LibraryValue["addStarterCourses"] = useCallback(() => {
-    const starter = seedDatabase();
     let added = 0;
     setDb((prev) => {
-      const courseIds = new Set(prev.courses.map((c) => c.id));
-      const facultyIds = new Set(prev.faculties.map((f) => f.id));
-      const creatorIds = new Set(prev.creators.map((c) => c.id));
-      const newCourses = starter.courses.filter((c) => !courseIds.has(c.id));
-      added = newCourses.length;
-      return {
-        ...prev,
-        faculties: [
-          ...prev.faculties,
-          ...starter.faculties.filter((f) => !facultyIds.has(f.id)),
-        ],
-        creators: [
-          ...prev.creators,
-          ...starter.creators.filter((c) => !creatorIds.has(c.id)),
-        ],
-        courses: [...prev.courses, ...newCourses],
-      };
+      // Drop the marker so the merge runs even if this library already has it.
+      const result = withStarterCourses({ ...prev, starterVersion: undefined });
+      added = result.added;
+      return result.db;
     });
     return added;
   }, []);
 
   const resetToDemo = useCallback(() => setDb(seedDatabase()), []);
   const clearAll = useCallback(
-    () => setDb({ ...structuredClone(emptyDatabase), creators: [{ id: "cr-self", name: "You", isSelf: true }] }),
+    () =>
+      setDb({
+        ...structuredClone(emptyDatabase),
+        // Deliberately empty stays empty, rather than refilling on next load.
+        starterVersion: STARTER_VERSION,
+        creators: [{ id: "cr-self", name: "You", isSelf: true }],
+      }),
     [],
   );
 

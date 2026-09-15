@@ -162,6 +162,12 @@ export type AccentToken =
 /** Everything the app persists. One object = one Supabase-shaped snapshot. */
 export interface Database {
   version: number;
+  /**
+   * Which edition of the starter course list this library has already been
+   * given. Absent means it has never been offered one, so the courses are
+   * merged in on load. Bumping STARTER_VERSION hands out a new set once.
+   */
+  starterVersion?: number;
   creators: Creator[];
   faculties: Faculty[];
   courses: Course[];
