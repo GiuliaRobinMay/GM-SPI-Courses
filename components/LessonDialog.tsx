@@ -9,6 +9,7 @@ import { estimateMinutes } from "@/lib/insights";
 import type { SourceKind } from "@/lib/types";
 import { CreatorPicker } from "./CreatorPicker";
 import { Field, Modal } from "./ui";
+import { wordingFor } from "@/lib/wording";
 
 const SOURCE_KINDS: { value: SourceKind; label: string }[] = [
   { value: "transcript", label: "Transcript" },
@@ -53,6 +54,11 @@ export function LessonDialog({
   const [notes, setNotes] = useState("");
   const [fileName, setFileName] = useState<string | undefined>(undefined);
   const [fileWarning, setFileWarning] = useState<string | null>(null);
+
+  // A shelf of resources says "resource" where a course says "lesson".
+  const nouns = wordingFor(
+    db.courses.find((c) => c.id === (existing?.courseId ?? courseId ?? course))?.kind,
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -129,8 +135,12 @@ export function LessonDialog({
       open={open}
       onClose={onClose}
       wide
-      title={existing ? "Edit lesson" : "Add material"}
-      description="Drop in a transcript, a video link, or both. Everything keeps its source."
+      title={existing ? `Edit ${nouns.item}` : nouns.add}
+      description={
+        nouns.item === "resource"
+          ? "Link a PDF, cheat sheet or worksheet. It keeps the link back to where it lives."
+          : "Drop in a transcript, a video link, or both. Everything keeps its source."
+      }
       footer={
         <>
           <span className="mr-auto text-[12px] text-slate-400">
@@ -146,14 +156,14 @@ export function LessonDialog({
             onClick={submit}
             disabled={!title.trim() || !course}
           >
-            {existing ? "Save changes" : "Add lesson"}
+            {existing ? "Save changes" : nouns.add}
           </button>
         </>
       }
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <Field label="Lesson title">
+          <Field label={`${nouns.item[0].toUpperCase()}${nouns.item.slice(1)} title`}>
             <input
               autoFocus
               className="field"

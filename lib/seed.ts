@@ -73,9 +73,31 @@ const courses: Course[] = SPI.map((spec) => ({
   updatedAt: now,
 }));
 
+/**
+ * Resource shelves. Each holds assets — a PDF, a cheat sheet, a worksheet —
+ * rather than lessons, and each keeps the link to where it came from. Another
+ * community's resources become a second shelf beside this one.
+ */
+const RESOURCE_SHELVES: Course[] = [
+  {
+    id: "co-spi-free-resources",
+    facultyId: "fa-resources",
+    kind: "resources",
+    title: "SPI free resources",
+    subtitle: "Cheat sheets, worksheets and templates",
+    creatorId: "cr-spi",
+    sourceUrl: "https://community.smartpassiveincome.com/c/free-resources",
+    topics: [],
+    accent: "amber",
+    icon: "folder",
+    createdAt: now,
+    updatedAt: now,
+  },
+];
+
 export const SEED: Database = {
   version: 1,
-  starterVersion: 2,
+  starterVersion: 3,
   creators: [
     { id: "cr-self", name: "Giulia", isSelf: true },
     {
@@ -94,8 +116,16 @@ export const SEED: Database = {
       order: 0,
       description: "The SPI community library.",
     },
+    {
+      id: "fa-resources",
+      name: "Resources",
+      icon: "folder",
+      accent: "amber",
+      order: 1,
+      description: "Cheat sheets, worksheets and PDFs, by where they came from.",
+    },
   ],
-  courses,
+  courses: [...courses, ...RESOURCE_SHELVES],
   lessons: [],
 };
 
@@ -103,7 +133,7 @@ export const SEED: Database = {
  * The edition of the list above. Raise it after changing the courses and
  * every existing library picks up the additions once, on next load.
  */
-export const STARTER_VERSION = 2;
+export const STARTER_VERSION = 3;
 
 /**
  * Put the starter courses into a library, skipping anything already there.
@@ -135,7 +165,7 @@ export function withStarterCourses(db: Database): {
     added: newCourses.length,
     db: {
       ...db,
-      starterVersion: 2,
+      starterVersion: 3,
       faculties: [
         ...db.faculties.map((f) => {
           const fresh = starterFaculty.get(f.id);

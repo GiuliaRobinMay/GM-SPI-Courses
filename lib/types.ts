@@ -45,9 +45,18 @@ export interface Faculty {
   order: number;
 }
 
+/**
+ * What a "course" actually holds. A course is studied in order; a shelf of
+ * resources is dipped into. They share a shape, so they share a type — only
+ * the wording and the ordering differ.
+ */
+export type CourseKind = "course" | "resources";
+
 export interface Course {
   id: string;
   facultyId: string;
+  /** Defaults to "course" when absent. */
+  kind?: CourseKind;
   title: string;
   subtitle?: string;
   description?: string;

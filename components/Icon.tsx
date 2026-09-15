@@ -5,7 +5,7 @@ import {
   Compass, Dumbbell, Flame, Globe2, GraduationCap, Heart, Landmark, Leaf,
   Lightbulb, LineChart, Music, Palette, PenTool, Rocket, Users, Wrench,
   Handshake, LayoutTemplate, Link2, Magnet, Mail, MessagesSquare, Mic,
-  Presentation, Target, Video,
+  FolderOpen, Presentation, Target, Video,
   type LucideIcon,
 } from "lucide-react";
 
@@ -45,6 +45,7 @@ export const FACULTY_ICONS: Record<string, LucideIcon> = {
   presentation: Presentation,
   target: Target,
   video: Video,
+  folder: FolderOpen,
 };
 
 export const FACULTY_ICON_NAMES = Object.keys(FACULTY_ICONS);

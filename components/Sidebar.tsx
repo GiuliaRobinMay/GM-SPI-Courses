@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ChevronRight, PanelLeft, PanelLeftClose, Plus, Settings } from "lucide-react";
+import { ChevronRight, LayoutDashboard, PanelLeft, PanelLeftClose, Plus, Settings } from "lucide-react";
 import { useLibrary } from "@/lib/store";
 import { accent } from "@/lib/theme";
 import { CourseDialog } from "./CourseDialog";
@@ -77,6 +77,21 @@ export function Sidebar() {
           {collapsed ? <PanelLeft className="size-4" /> : <PanelLeftClose className="size-4" />}
         </button>
       </div>
+
+      <nav className="px-3 pb-2">
+        <Link
+          href="/"
+          title={collapsed ? "Dashboard" : undefined}
+          className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+            pathname === "/"
+              ? "bg-slate-100 text-slate-900"
+              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          }`}
+        >
+          <LayoutDashboard className="size-[18px] shrink-0" strokeWidth={1.8} />
+          {!collapsed && <span>Dashboard</span>}
+        </Link>
+      </nav>
 
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="flex flex-col gap-3 overflow-y-auto px-3 pb-4">

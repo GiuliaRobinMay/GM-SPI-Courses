@@ -15,13 +15,16 @@ import { LessonDialog } from "@/components/LessonDialog";
 import { FacultyIcon } from "@/components/Icon";
 import { EmptyState, Progress, Tag } from "@/components/ui";
 import type { Lesson, LessonStatus } from "@/lib/types";
+import { wordingFor, type Wording } from "@/lib/wording";
 
-const FILTERS: { value: LessonStatus | "all"; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "todo", label: "To study" },
-  { value: "studying", label: "Studying" },
-  { value: "done", label: "Done" },
-];
+function filtersFor(words: Wording): { value: LessonStatus | "all"; label: string }[] {
+  return [
+    { value: "all", label: "All" },
+    { value: "todo", label: words.todo },
+    { value: "studying", label: words.doing },
+    { value: "done", label: words.done },
+  ];
+}
 
 export default function CoursePage({
   params,
@@ -56,6 +59,8 @@ export default function CoursePage({
 
   const a = accent(item.accent);
   const fac = faculty(item.facultyId);
+  const words = wordingFor(item.kind);
+  const FILTERS = filtersFor(words);
   const author = creator(item.creatorId);
   const lessons = lessonsOf(item.id);
   const progress = courseProgress(item.id);
@@ -122,7 +127,7 @@ export default function CoursePage({
               onClick={() => setLessonOpen(true)}
             >
               <Plus className="size-4" />
-              Add material
+              {words.add}
             </button>
           </div>
 
@@ -151,21 +156,13 @@ export default function CoursePage({
             </div>
           ) : (
             <EmptyState
-              title={
-                lessons.length === 0
-                  ? "No lessons yet"
-                  : "Nothing in this filter"
-              }
-              body={
-                lessons.length === 0
-                  ? "Paste a transcript, drop a subtitle file, or save a video link."
-                  : undefined
-              }
+              title={lessons.length === 0 ? words.empty : "Nothing in this filter"}
+              body={lessons.length === 0 ? words.emptyBody : undefined}
               action={
                 lessons.length === 0 ? (
                   <button className="btn-primary" onClick={() => setLessonOpen(true)}>
                     <Plus className="size-4" />
-                    Add material
+                    {words.add}
                   </button>
                 ) : undefined
               }
@@ -177,7 +174,7 @@ export default function CoursePage({
           <div className="card p-5">
             <p className="text-[13px] font-medium text-slate-900">Progress</p>
             <p className="muted mt-0.5">
-              {progress.done} of {progress.total} lessons done
+              {progress.done} of {progress.total} {words.progress}
             </p>
             <div className="mt-3">
               <Progress done={progress.done} total={progress.total} />
@@ -263,7 +260,7 @@ export default function CoursePage({
               onClick={() => {
                 if (
                   confirm(
-                    `Delete "${item.title}" and its ${lessons.length} lesson(s)?`,
+                    `Delete "${item.title}" and its ${lessons.length} ${words.items}?`,
                   )
                 ) {
                   removeCourse(item.id);
