@@ -5,7 +5,10 @@ import {
   CloudUpload, Download, FolderPlus, GraduationCap, LogOut, RotateCcw, Trash2, Upload,
 } from "lucide-react";
 import { useLibrary } from "@/lib/store";
-import { localPersistence, persistence, storageReport, isSupabaseConfigured } from "@/lib/persistence";
+import {
+  localPersistence, persistence, storageReport, isSupabaseConfigured,
+  type BackupMeta,
+} from "@/lib/persistence";
 import { getSupabase } from "@/lib/supabase/client";
 import { validatePackage, type ImportReport } from "@/lib/importer";
 import type { CoursePackage } from "@/lib/types";
@@ -16,11 +19,13 @@ export default function SettingsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [reports, setReports] = useState<ImportReport[]>([]);
   const [storage, setStorage] = useState<{ used: number; quota: number | null } | null>(null);
+  const [backups, setBackups] = useState<BackupMeta[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
   const courseInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     void storageReport(db).then(setStorage);
+    void persistence.listBackups().then(setBackups);
   }, [db]);
 
   /** Read a batch of course files, merging the valid ones and naming the rest. */
@@ -227,7 +232,8 @@ export default function SettingsPage() {
               <button
                 className="btn-ghost"
                 onClick={async () => {
-                  const local = await localPersistence.load();
+                  const result = await localPersistence.load();
+                  const local = result.status === "ok" ? result.db : null;
                   if (!local || local.courses.length === 0) {
                     setMessage("Nothing stored locally in this browser to move.");
                     return;
@@ -267,6 +273,53 @@ export default function SettingsPage() {
               </button>
             }
           />
+        </section>
+      )}
+
+      {backups.length > 0 && (
+        <section className="card p-5">
+          <p className="font-medium text-slate-900">Earlier versions</p>
+          <p className="muted mt-0.5">
+            Taken automatically whenever something was about to replace a
+            larger library with a smaller one.
+          </p>
+          <ul className="mt-3 space-y-2">
+            {backups.map((backup) => (
+              <li
+                key={backup.key}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 px-3.5 py-2.5"
+              >
+                <div>
+                  <p className="text-[13px] font-medium text-slate-900">
+                    {new Date(backup.savedAt).toLocaleString()}
+                  </p>
+                  <p className="text-[12px] text-slate-500">
+                    {backup.courses} courses · {backup.lessons} lessons
+                  </p>
+                </div>
+                <button
+                  className="btn-ghost"
+                  onClick={async () => {
+                    const snapshot = await persistence.readBackup(backup.key);
+                    if (!snapshot) {
+                      setMessage("That version could not be read.");
+                      return;
+                    }
+                    if (
+                      !confirm(
+                        `Restore ${backup.courses} courses and ${backup.lessons} lessons from ${new Date(backup.savedAt).toLocaleString()}? Your current library is saved as a version first.`,
+                      )
+                    )
+                      return;
+                    replaceAll(snapshot);
+                    setMessage("Restored.");
+                  }}
+                >
+                  Restore
+                </button>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

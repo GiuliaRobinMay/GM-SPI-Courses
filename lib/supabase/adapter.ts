@@ -8,7 +8,7 @@
  * The store keeps its simple "here is the whole database" interface.
  */
 
-import type { PersistenceAdapter } from "../persistence";
+import type { BackupMeta, LoadResult, PersistenceAdapter } from "../persistence";
 import type {
   Course, Creator, Database, Faculty, Lesson, LessonStatus, SourceKind,
   AccentToken, StudyOutput,
@@ -149,19 +149,22 @@ export function createSupabaseAdapter(): PersistenceAdapter {
   let lastSaved: Database | null = null;
 
   return {
-    async load() {
+    async load(): Promise<LoadResult> {
       const supabase = getSupabase();
-      if (!supabase) return null;
+      if (!supabase) return { status: "empty" };
 
       const { data: session } = await supabase.auth.getSession();
-      if (!session.session) return null; // Signed out: nothing to load.
+      if (!session.session) return { status: "empty" }; // Signed out.
 
       const [faculties, creators, courses, lessons] = await Promise.all(
         TABLES.map((table) => supabase.from(table).select("*")),
       );
 
+      // A failed query is an error, never an empty library: seeding over a
+      // real account because the network blipped is the bug this type exists
+      // to prevent.
       const failure = [faculties, creators, courses, lessons].find((r) => r.error);
-      if (failure?.error) throw new Error(failure.error.message);
+      if (failure?.error) return { status: "error", message: failure.error.message };
 
       const db: Database = {
         version: 1,
@@ -172,7 +175,7 @@ export function createSupabaseAdapter(): PersistenceAdapter {
       };
 
       lastSaved = structuredClone(db);
-      return db;
+      return { status: "ok", db };
     },
 
     async save(db) {
@@ -221,6 +224,15 @@ export function createSupabaseAdapter(): PersistenceAdapter {
         await supabase.from(table).delete().neq("id", "");
       }
       lastSaved = null;
+    },
+
+    // Supabase keeps its own history; the local snapshot list does not apply.
+    async listBackups(): Promise<BackupMeta[]> {
+      return [];
+    },
+
+    async readBackup() {
+      return null;
     },
   };
 }

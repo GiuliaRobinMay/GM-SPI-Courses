@@ -47,6 +47,8 @@ function withStudyOutput(db: Database): Database {
 
 interface LibraryValue {
   ready: boolean;
+  /** Set when the library could not be read or written. Nothing is seeded. */
+  loadError: string | null;
   db: Database;
 
   /* selectors */
@@ -97,13 +99,24 @@ const LibraryContext = createContext<LibraryValue | null>(null);
 export function LibraryProvider({ children }: { children: React.ReactNode }) {
   const [db, setDb] = useState<Database>(emptyDatabase);
   const [ready, setReady] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const hydrated = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
-    persistence.load().then((loaded) => {
+    persistence.load().then((result) => {
       if (cancelled) return;
-      setDb(withStarterCourses(withStudyOutput(loaded ?? seedDatabase())).db);
+
+      if (result.status === "error") {
+        // Do NOT seed and do NOT mark hydrated: saving now would write an
+        // empty library over one we simply failed to read.
+        setLoadError(result.message);
+        setReady(true);
+        return;
+      }
+
+      const base = result.status === "ok" ? result.db : seedDatabase();
+      setDb(withStarterCourses(withStudyOutput(base)).db);
       hydrated.current = true;
       setReady(true);
     });
@@ -114,7 +127,12 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!hydrated.current) return;
-    void persistence.save(db);
+    void persistence.save(db).catch((error: unknown) => {
+      // A write that fails silently is how work disappears without warning.
+      setLoadError(
+        error instanceof Error ? `Could not save: ${error.message}` : "Could not save.",
+      );
+    });
   }, [db]);
 
   /* ---------------------------- selectors ---------------------------- */
@@ -393,6 +411,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<LibraryValue>(
     () => ({
       ready,
+      loadError,
       db,
       faculty,
       course,
@@ -422,7 +441,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       clearAll,
     }),
     [
-      ready, db, faculty, course, lesson, creator, creatorName, coursesOf,
+      ready, loadError, db, faculty, course, lesson, creator, creatorName, coursesOf,
       lessonsOf, courseProgress, search, addFaculty, updateFaculty,
       removeFaculty, addCourse, updateCourse, removeCourse, addLesson,
       updateLesson, removeLesson, setLessonStatus, regenerateStudy, addCreator,

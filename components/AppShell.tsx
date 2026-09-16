@@ -6,7 +6,7 @@ import { TopBar } from "./TopBar";
 import { useLibrary } from "@/lib/store";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { ready } = useLibrary();
+  const { ready, loadError } = useLibrary();
 
   return (
     <div className="flex min-h-dvh">
@@ -16,7 +16,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <TopBar />
         </Suspense>
         <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
-          {ready ? children : <LoadingShell />}
+          {loadError ? (
+            <div className="card border-brand-red/30 bg-brand-red/5 p-6">
+              <p className="font-semibold text-brand-red">
+                Your library could not be opened
+              </p>
+              <p className="mt-2 text-[14px] leading-relaxed text-slate-700">
+                Nothing has been changed or overwritten — the app stops rather
+                than risk replacing your library with an empty one.
+              </p>
+              <p className="mt-2 text-[13px] text-slate-500">{loadError}</p>
+              <button
+                className="btn-primary mt-4"
+                onClick={() => window.location.reload()}
+              >
+                Try again
+              </button>
+            </div>
+          ) : ready ? (
+            children
+          ) : (
+            <LoadingShell />
+          )}
         </main>
       </div>
     </div>

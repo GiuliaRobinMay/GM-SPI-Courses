@@ -8,26 +8,39 @@ export { isSupabaseConfigured };
 /**
  * The single place the app talks to storage.
  *
- * IndexedDB, not localStorage: localStorage caps out around 5 MB, and one
- * imported course with full transcripts runs about 0.2 MB, so a library of
- * twenty-odd courses would not fit. IndexedDB quota is typically hundreds of
- * megabytes or more.
- *
- * When Supabase arrives, implement this same interface against it
- * (`load` → select, `save` → upsert, or move to per-row mutations) and swap
- * the export at the bottom. Nothing in the UI imports storage directly, so no
- * component has to change.
+ * `load` returns a result, not a nullable value, and that distinction is the
+ * whole point: an earlier version returned null both for "nothing is stored"
+ * and for "I could not read it", the caller seeded a fresh library on null,
+ * and the save that followed wrote that fresh library over a real one. A
+ * single transient read failure destroyed the library. A failed read must
+ * never be mistaken for an empty one.
  */
+export type LoadResult =
+  | { status: "ok"; db: Database }
+  | { status: "empty" }
+  | { status: "error"; message: string };
+
+export interface BackupMeta {
+  key: string;
+  savedAt: string;
+  courses: number;
+  lessons: number;
+}
+
 export interface PersistenceAdapter {
-  load(): Promise<Database | null>;
+  load(): Promise<LoadResult>;
   save(db: Database): Promise<void>;
   clear(): Promise<void>;
+  listBackups(): Promise<BackupMeta[]>;
+  readBackup(key: string): Promise<Database | null>;
 }
 
 const DB_NAME = "studiolo";
 const DB_VERSION = 1;
 const STORE = "library";
 const RECORD_KEY = "current";
+const BACKUP_PREFIX = "backup:";
+const MAX_BACKUPS = 8;
 
 /** The pre-IndexedDB location, read once so existing libraries survive. */
 const LEGACY_STORAGE_KEY = "studiolo.library.v1";
@@ -40,28 +53,47 @@ function openDatabase(): Promise<IDBDatabase> {
       if (!idb.objectStoreNames.contains(STORE)) idb.createObjectStore(STORE);
     };
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    request.onerror = () => reject(request.error ?? new Error("indexedDB.open failed"));
+    // Another tab holding an older version would otherwise hang forever.
+    request.onblocked = () =>
+      reject(new Error("Another tab has this library open. Close it and reload."));
   });
 }
 
-function readRecord(idb: IDBDatabase): Promise<Database | null> {
+function get<T>(idb: IDBDatabase, key: string): Promise<T | null> {
   return new Promise((resolve, reject) => {
-    const request = idb.transaction(STORE, "readonly").objectStore(STORE).get(RECORD_KEY);
-    request.onsuccess = () => resolve((request.result as Database) ?? null);
+    const request = idb.transaction(STORE, "readonly").objectStore(STORE).get(key);
+    request.onsuccess = () => resolve((request.result as T) ?? null);
     request.onerror = () => reject(request.error);
   });
 }
 
-function writeRecord(idb: IDBDatabase, db: Database): Promise<void> {
+function put(idb: IDBDatabase, key: string, value: unknown): Promise<void> {
   return new Promise((resolve, reject) => {
     const tx = idb.transaction(STORE, "readwrite");
-    tx.objectStore(STORE).put(db, RECORD_KEY);
+    tx.objectStore(STORE).put(value, key);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
 }
 
-/** Anything written before the move to IndexedDB. Read once, then retired. */
+function keys(idb: IDBDatabase): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    const request = idb.transaction(STORE, "readonly").objectStore(STORE).getAllKeys();
+    request.onsuccess = () => resolve(request.result.map(String));
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function remove(idb: IDBDatabase, key: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const tx = idb.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 function readLegacy(): Database | null {
   try {
     const raw = window.localStorage.getItem(LEGACY_STORAGE_KEY);
@@ -73,60 +105,101 @@ function readLegacy(): Database | null {
   }
 }
 
+const size = (db: Database) => db.courses.length + db.lessons.length;
+
+/**
+ * Snapshot the stored library before a write that would shrink it.
+ *
+ * Every real loss of work looks the same from here: something large is about
+ * to be replaced by something smaller. Whether that is a bug, a misclick on
+ * "Clear all", or a bad restore, the previous state is worth keeping.
+ */
+async function backupIfShrinking(idb: IDBDatabase, incoming: Database): Promise<void> {
+  const current = await get<Database>(idb, RECORD_KEY);
+  if (!current || size(current) <= size(incoming)) return;
+
+  await put(idb, `${BACKUP_PREFIX}${new Date().toISOString()}`, current);
+
+  const stale = (await keys(idb))
+    .filter((k) => k.startsWith(BACKUP_PREFIX))
+    .sort()
+    .slice(0, -MAX_BACKUPS);
+  for (const key of stale) await remove(idb, key);
+}
+
 export const indexedDbAdapter: PersistenceAdapter = {
   async load() {
-    if (typeof window === "undefined" || !("indexedDB" in window)) return null;
+    if (typeof window === "undefined" || !("indexedDB" in window)) {
+      return { status: "empty" };
+    }
     try {
       const idb = await openDatabase();
-      const stored = await readRecord(idb);
-      if (stored) return stored;
+      const stored = await get<Database>(idb, RECORD_KEY);
+      if (stored) return { status: "ok", db: stored };
 
-      // First run after the upgrade: carry the old library across.
       const legacy = readLegacy();
       if (legacy) {
-        await writeRecord(idb, legacy);
+        await put(idb, RECORD_KEY, legacy);
         window.localStorage.removeItem(LEGACY_STORAGE_KEY);
-        return legacy;
+        return { status: "ok", db: legacy };
       }
-      return null;
-    } catch {
-      return null;
+      return { status: "empty" };
+    } catch (error) {
+      return {
+        status: "error",
+        message: error instanceof Error ? error.message : "Could not read the library.",
+      };
     }
   },
 
   async save(db) {
     if (typeof window === "undefined" || !("indexedDB" in window)) return;
-    try {
-      const idb = await openDatabase();
-      await writeRecord(idb, db);
-    } catch {
-      // Private mode, or quota. The session still works, it just won't persist.
-    }
+    const idb = await openDatabase();
+    await backupIfShrinking(idb, db);
+    await put(idb, RECORD_KEY, db);
   },
 
   async clear() {
     if (typeof window === "undefined" || !("indexedDB" in window)) return;
+    const idb = await openDatabase();
+    const current = await get<Database>(idb, RECORD_KEY);
+    if (current) await put(idb, `${BACKUP_PREFIX}${new Date().toISOString()}`, current);
+    await remove(idb, RECORD_KEY);
+  },
+
+  async listBackups() {
+    if (typeof window === "undefined" || !("indexedDB" in window)) return [];
     try {
       const idb = await openDatabase();
-      await new Promise<void>((resolve, reject) => {
-        const tx = idb.transaction(STORE, "readwrite");
-        tx.objectStore(STORE).delete(RECORD_KEY);
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error);
-      });
+      const all = (await keys(idb)).filter((k) => k.startsWith(BACKUP_PREFIX)).sort().reverse();
+      const metas: BackupMeta[] = [];
+      for (const key of all) {
+        const snapshot = await get<Database>(idb, key);
+        if (!snapshot) continue;
+        metas.push({
+          key,
+          savedAt: key.slice(BACKUP_PREFIX.length),
+          courses: snapshot.courses.length,
+          lessons: snapshot.lessons.length,
+        });
+      }
+      return metas;
     } catch {
-      // Nothing stored to clear.
+      return [];
+    }
+  },
+
+  async readBackup(key) {
+    if (typeof window === "undefined" || !("indexedDB" in window)) return null;
+    try {
+      const idb = await openDatabase();
+      return await get<Database>(idb, key);
+    } catch {
+      return null;
     }
   },
 };
 
-/**
- * Supabase when it is configured, the browser's own storage otherwise.
- *
- * With no env vars the app is exactly what it was: local, single-device, no
- * account. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY and
- * it becomes an account-backed library, without a line of UI changing.
- */
 export const persistence: PersistenceAdapter = isSupabaseConfigured
   ? createSupabaseAdapter()
   : indexedDbAdapter;
@@ -134,7 +207,6 @@ export const persistence: PersistenceAdapter = isSupabaseConfigured
 /** The local adapter, still reachable so a library can be migrated upward. */
 export const localPersistence = indexedDbAdapter;
 
-/** Bytes the library occupies, and what the browser is willing to give us. */
 export async function storageReport(db: Database): Promise<{
   used: number;
   quota: number | null;
