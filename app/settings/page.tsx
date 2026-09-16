@@ -203,7 +203,7 @@ export default function SettingsPage() {
           body="Deletes every faculty, course and lesson stored in this browser."
           action={
             <button
-              className="btn-ghost text-rose-600 hover:bg-rose-50"
+              className="btn-ghost text-brand-red hover:bg-brand-red/10"
               onClick={() => {
                 if (confirm("Delete everything? This cannot be undone.")) {
                   clearAll();
@@ -284,16 +284,16 @@ export default function SettingsPage() {
               <li
                 key={i}
                 className={`rounded-xl px-3 py-2.5 ${
-                  r.ok ? "bg-emerald-50 text-emerald-900" : "bg-rose-50 text-rose-900"
+                  r.ok ? "bg-brand-green/10 text-brand-green" : "bg-brand-red/10 text-brand-red"
                 }`}
               >
                 {r.ok ? (
                   <>
                     <span className="font-medium">{r.courseTitle}</span>
                     {r.facultyName && (
-                      <span className="text-emerald-700"> → {r.facultyName}</span>
+                      <span className="text-brand-green"> → {r.facultyName}</span>
                     )}
-                    <span className="text-emerald-700">
+                    <span className="text-brand-green">
                       {" · "}
                       {r.courseCreated ? "new course" : "updated"}
                       {r.lessonsAdded > 0 && `, ${r.lessonsAdded} lessons added`}

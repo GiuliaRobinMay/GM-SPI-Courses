@@ -4,13 +4,13 @@ import { CalendarDays, Flag } from "lucide-react";
 import type { Priority } from "@/lib/types";
 
 const LEVELS: { value: Priority; label: string; className: string }[] = [
-  { value: "high", label: "High", className: "bg-rose-600 text-white" },
+  { value: "high", label: "High", className: "bg-brand-red text-white" },
   { value: "normal", label: "Normal", className: "bg-slate-900 text-white" },
   { value: "low", label: "Low", className: "bg-slate-400 text-white" },
 ];
 
 export const PRIORITY_STYLE: Record<Priority, { label: string; className: string }> = {
-  high: { label: "High", className: "bg-rose-100 text-rose-700" },
+  high: { label: "High", className: "bg-brand-red/12 text-brand-red" },
   normal: { label: "Normal", className: "bg-slate-100 text-slate-600" },
   low: { label: "Low", className: "bg-slate-100 text-slate-400" },
 };

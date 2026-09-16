@@ -107,7 +107,7 @@ export function Progress({ done, total }: { done: number; total: number }) {
   return (
     <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
       <div
-        className="h-full rounded-full bg-indigo-500 transition-[width]"
+        className="h-full rounded-full bg-brand-violet transition-[width]"
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -116,8 +116,8 @@ export function Progress({ done, total }: { done: number; total: number }) {
 
 const STATUS_STYLE: Record<LessonStatus, { label: string; className: string }> = {
   todo: { label: "To study", className: "bg-slate-100 text-slate-600" },
-  studying: { label: "Studying", className: "bg-amber-100 text-amber-700" },
-  done: { label: "Done", className: "bg-emerald-100 text-emerald-700" },
+  studying: { label: "Studying", className: "bg-brand-orange/12 text-brand-orange" },
+  done: { label: "Done", className: "bg-brand-green/12 text-brand-green" },
 };
 
 export function StatusBadge({ status }: { status: LessonStatus }) {

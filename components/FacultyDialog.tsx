@@ -25,14 +25,14 @@ export function FacultyDialog({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [icon, setIcon] = useState("book");
-  const [tone, setTone] = useState<AccentToken>("indigo");
+  const [tone, setTone] = useState<AccentToken>("violet");
 
   useEffect(() => {
     if (!open) return;
     setName(existing?.name ?? "");
     setDescription(existing?.description ?? "");
     setIcon(existing?.icon ?? "book");
-    setTone(existing?.accent ?? "indigo");
+    setTone(existing?.accent ?? "violet");
   }, [open, existing]);
 
   function submit() {

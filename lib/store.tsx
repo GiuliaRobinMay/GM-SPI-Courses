@@ -193,7 +193,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       id: id("fa"),
       name: input.name,
       icon: input.icon ?? "book",
-      accent: input.accent ?? "indigo",
+      accent: input.accent ?? "violet",
       description: input.description,
       order: input.order ?? 999,
     };
@@ -234,7 +234,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       creatorId: input.creatorId ?? "cr-self",
       sourceUrl: input.sourceUrl,
       topics: input.topics ?? [],
-      accent: input.accent ?? "indigo",
+      accent: input.accent ?? "violet",
       createdAt: stamp(),
       updatedAt: stamp(),
       favorite: input.favorite,

@@ -105,7 +105,7 @@ export function mergePackage(
         id: id("fa"),
         name: pkg.faculty.name,
         icon: pkg.faculty.icon ?? "cap",
-        accent: pkg.faculty.accent ?? "indigo",
+        accent: pkg.faculty.accent ?? "violet",
         description: pkg.faculty.description,
         order: faculties.length,
       };
@@ -116,7 +116,7 @@ export function mergePackage(
   faculty ??= faculties[0];
   if (!faculty) {
     // An empty library with no faculty named in the file: make somewhere to put it.
-    faculty = { id: id("fa"), name: "Imported", icon: "cap", accent: "indigo", order: 0 };
+    faculty = { id: id("fa"), name: "Imported", icon: "cap", accent: "violet", order: 0 };
     faculties.push(faculty);
     report.facultyCreated = true;
   }

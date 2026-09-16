@@ -59,7 +59,7 @@ export function CourseCard({ course }: { course: Course }) {
       </div>
 
       <div className="p-4">
-        <p className="font-semibold leading-snug text-slate-900 group-hover:text-indigo-700">
+        <p className="font-semibold leading-snug text-slate-900 group-hover:text-brand-violet">
           {course.title}
         </p>
         {course.subtitle && <p className="muted mt-1 line-clamp-2">{course.subtitle}</p>}

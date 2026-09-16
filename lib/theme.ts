@@ -14,59 +14,52 @@ interface AccentStyle {
 }
 
 export const ACCENTS: Record<AccentToken, AccentStyle> = {
-  indigo: {
-    soft: "bg-indigo-50",
-    softText: "text-indigo-600",
-    solid: "bg-indigo-600",
-    border: "border-indigo-100",
-    cover: "from-indigo-500/90 to-violet-500/90",
-  },
   violet: {
-    soft: "bg-violet-50",
-    softText: "text-violet-600",
-    solid: "bg-violet-600",
-    border: "border-violet-100",
-    cover: "from-violet-500/90 to-fuchsia-500/90",
+    soft: "bg-brand-violet/10",
+    softText: "text-brand-violet",
+    solid: "bg-brand-violet",
+    border: "border-brand-violet/20",
+    cover: "from-brand-violet to-brand-violet-deep",
   },
-  sky: {
-    soft: "bg-sky-50",
-    softText: "text-sky-600",
-    solid: "bg-sky-600",
-    border: "border-sky-100",
-    cover: "from-sky-500/90 to-cyan-400/90",
+  red: {
+    soft: "bg-brand-red/10",
+    softText: "text-brand-red",
+    solid: "bg-brand-red",
+    border: "border-brand-red/20",
+    cover: "from-brand-red to-brand-red-deep",
   },
-  emerald: {
-    soft: "bg-emerald-50",
-    softText: "text-emerald-600",
-    solid: "bg-emerald-600",
-    border: "border-emerald-100",
-    cover: "from-emerald-500/90 to-teal-400/90",
+  green: {
+    soft: "bg-brand-green/10",
+    softText: "text-brand-green",
+    solid: "bg-brand-green",
+    border: "border-brand-green/20",
+    cover: "from-brand-green to-brand-green-deep",
   },
-  amber: {
-    soft: "bg-amber-50",
-    softText: "text-amber-600",
-    solid: "bg-amber-500",
-    border: "border-amber-100",
-    cover: "from-amber-400/90 to-orange-500/90",
+  orange: {
+    soft: "bg-brand-orange/10",
+    softText: "text-brand-orange",
+    solid: "bg-brand-orange",
+    border: "border-brand-orange/20",
+    cover: "from-brand-orange to-brand-orange-deep",
   },
-  rose: {
-    soft: "bg-rose-50",
-    softText: "text-rose-600",
-    solid: "bg-rose-600",
-    border: "border-rose-100",
-    cover: "from-rose-500/90 to-pink-500/90",
-  },
-  slate: {
-    soft: "bg-slate-100",
-    softText: "text-slate-600",
-    solid: "bg-slate-700",
-    border: "border-slate-200",
-    cover: "from-slate-500/90 to-slate-700/90",
-  },
+};
+
+/**
+ * Libraries written before the palette was fixed carry Tailwind's names.
+ * Fold each onto its nearest brand colour rather than dropping the row.
+ */
+const LEGACY: Record<string, AccentToken> = {
+  indigo: "violet",
+  sky: "violet",
+  slate: "violet",
+  rose: "red",
+  emerald: "green",
+  amber: "orange",
 };
 
 export const ACCENT_TOKENS = Object.keys(ACCENTS) as AccentToken[];
 
-export function accent(token: AccentToken | undefined): AccentStyle {
-  return ACCENTS[token ?? "indigo"];
+export function accent(token: string | undefined): AccentStyle {
+  if (token && token in ACCENTS) return ACCENTS[token as AccentToken];
+  return ACCENTS[(token && LEGACY[token]) || "violet"];
 }

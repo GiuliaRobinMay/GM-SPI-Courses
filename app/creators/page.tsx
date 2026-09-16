@@ -40,7 +40,7 @@ export default function CreatorsPage() {
                     <p className="truncate font-medium text-slate-900">
                       {c.name}
                       {c.isSelf && (
-                        <span className="ml-1.5 rounded-md bg-indigo-50 px-1.5 py-0.5 text-[11px] font-medium text-indigo-600">
+                        <span className="ml-1.5 rounded-md bg-brand-violet/10 px-1.5 py-0.5 text-[11px] font-medium text-brand-violet">
                           you
                         </span>
                       )}
@@ -62,7 +62,7 @@ export default function CreatorsPage() {
                       <li key={co.id}>
                         <Link
                           href={`/course/${co.id}`}
-                          className="text-[13px] text-slate-600 hover:text-indigo-600"
+                          className="text-[13px] text-slate-600 hover:text-brand-violet"
                         >
                           {co.title}
                         </Link>
@@ -76,7 +76,7 @@ export default function CreatorsPage() {
                     href={c.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-indigo-600 hover:underline"
+                    className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-brand-violet hover:underline"
                   >
                     Visit
                     <ExternalLink className="size-3.5" />

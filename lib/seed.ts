@@ -24,7 +24,7 @@ interface Spec {
  * down the sidebar, so no two neighbours match and the list stays readable at
  * a glance. Colour carries no meaning here — the level does that.
  */
-const PALETTE: Course["accent"][] = ["violet", "rose", "emerald", "amber"];
+const PALETTE: Course["accent"][] = ["violet", "red", "green", "orange"];
 
 const SPI: Spec[] = [
   // Level 0 — start here
@@ -88,7 +88,7 @@ const RESOURCE_SHELVES: Course[] = [
     creatorId: "cr-spi",
     sourceUrl: "https://community.smartpassiveincome.com/c/free-resources",
     topics: [],
-    accent: "amber",
+    accent: "orange",
     icon: "folder",
     createdAt: now,
     updatedAt: now,
@@ -97,7 +97,7 @@ const RESOURCE_SHELVES: Course[] = [
 
 export const SEED: Database = {
   version: 1,
-  starterVersion: 3,
+  starterVersion: 4,
   creators: [
     { id: "cr-self", name: "Giulia", isSelf: true },
     {
@@ -120,7 +120,7 @@ export const SEED: Database = {
       id: "fa-resources",
       name: "Resources",
       icon: "folder",
-      accent: "amber",
+      accent: "orange",
       order: 1,
       description: "Cheat sheets, worksheets and PDFs, by where they came from.",
     },
@@ -133,7 +133,7 @@ export const SEED: Database = {
  * The edition of the list above. Raise it after changing the courses and
  * every existing library picks up the additions once, on next load.
  */
-export const STARTER_VERSION = 3;
+export const STARTER_VERSION = 4;
 
 /**
  * Put the starter courses into a library, skipping anything already there.
@@ -165,7 +165,7 @@ export function withStarterCourses(db: Database): {
     added: newCourses.length,
     db: {
       ...db,
-      starterVersion: 3,
+      starterVersion: 4,
       faculties: [
         ...db.faculties.map((f) => {
           const fresh = starterFaculty.get(f.id);

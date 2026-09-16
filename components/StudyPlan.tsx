@@ -121,7 +121,7 @@ export function StudyPlan() {
               {day && (
                 <span
                   className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium ${
-                    late ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-600"
+                    late ? "bg-brand-orange/12 text-brand-orange" : "bg-slate-100 text-slate-600"
                   }`}
                 >
                   <CalendarDays className="size-3" />

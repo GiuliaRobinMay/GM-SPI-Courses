@@ -89,9 +89,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         </p>
 
         {sent ? (
-          <div className="mt-5 rounded-xl bg-emerald-50 px-4 py-3.5 text-[13px] text-emerald-900">
+          <div className="mt-5 rounded-xl bg-brand-green/10 px-4 py-3.5 text-[13px] text-brand-green">
             <p className="font-medium">Check your email</p>
-            <p className="mt-1 text-emerald-800">
+            <p className="mt-1 text-brand-green">
               A sign-in link is on its way to {email}. Open it on this device.
             </p>
           </div>
@@ -111,7 +111,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
               {busy ? "Sending…" : "Email me a sign-in link"}
             </button>
             {error && (
-              <p className="rounded-lg bg-rose-50 px-3 py-2 text-[12px] text-rose-800">
+              <p className="rounded-lg bg-brand-red/10 px-3 py-2 text-[12px] text-brand-red">
                 {error}
               </p>
             )}

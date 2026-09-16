@@ -33,7 +33,7 @@ export function CourseDialog({
   const [sourceUrl, setSourceUrl] = useState("");
   const [topics, setTopics] = useState("");
   const [track, setTrack] = useState("");
-  const [tone, setTone] = useState<AccentToken>("indigo");
+  const [tone, setTone] = useState<AccentToken>("violet");
 
   useEffect(() => {
     if (!open) return;
@@ -45,7 +45,7 @@ export function CourseDialog({
     setSourceUrl(existing?.sourceUrl ?? "");
     setTopics(existing?.topics.join(", ") ?? "");
     setTrack(existing?.track ?? "");
-    setTone(existing?.accent ?? "indigo");
+    setTone(existing?.accent ?? "violet");
   }, [open, existing, facultyId, db.faculties, db.creators]);
 
   const topicList = topics

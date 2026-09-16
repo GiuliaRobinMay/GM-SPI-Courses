@@ -172,14 +172,8 @@ export interface StudyOutput {
   generatedAt: string;
 }
 
-export type AccentToken =
-  | "indigo"
-  | "violet"
-  | "sky"
-  | "emerald"
-  | "amber"
-  | "rose"
-  | "slate";
+/** The four brand colours. Nothing else is allowed as an accent. */
+export type AccentToken = "violet" | "red" | "green" | "orange";
 
 /** Everything the app persists. One object = one Supabase-shaped snapshot. */
 export interface Database {

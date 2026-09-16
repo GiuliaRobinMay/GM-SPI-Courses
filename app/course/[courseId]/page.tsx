@@ -198,7 +198,7 @@ export default function CoursePage({
               <p className="mt-0.5 text-[14px] font-medium text-slate-900">
                 {creatorName(item.creatorId)}
                 {author?.isSelf && (
-                  <span className="ml-1.5 rounded-md bg-indigo-50 px-1.5 py-0.5 text-[11px] font-medium text-indigo-600">
+                  <span className="ml-1.5 rounded-md bg-brand-violet/10 px-1.5 py-0.5 text-[11px] font-medium text-brand-violet">
                     yours
                   </span>
                 )}
@@ -217,7 +217,7 @@ export default function CoursePage({
                   href={item.sourceUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-0.5 inline-flex items-center gap-1.5 break-all text-[13px] text-indigo-600 hover:underline"
+                  className="mt-0.5 inline-flex items-center gap-1.5 break-all text-[13px] text-brand-violet hover:underline"
                 >
                   Open original
                   <ExternalLink className="size-3.5 shrink-0" />
@@ -256,7 +256,7 @@ export default function CoursePage({
               Edit
             </button>
             <button
-              className="btn-ghost text-rose-600 hover:bg-rose-50"
+              className="btn-ghost text-brand-red hover:bg-brand-red/10"
               onClick={() => {
                 if (
                   confirm(

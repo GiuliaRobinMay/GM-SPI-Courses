@@ -288,7 +288,7 @@ export function LessonDialog({
             </p>
           )}
           {fileWarning && (
-            <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-[12px] text-amber-800">
+            <p className="mt-2 rounded-lg bg-brand-orange/10 px-3 py-2 text-[12px] text-brand-orange">
               {fileWarning}
             </p>
           )}

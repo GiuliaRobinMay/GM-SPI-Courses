@@ -186,7 +186,7 @@ export function Sidebar() {
         </Link>
 
         <div className="mt-1 flex items-center gap-3 rounded-xl px-3 py-2">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[12px] font-semibold text-indigo-700">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[12px] font-semibold text-brand-violet">
             {(you?.name ?? "You").slice(0, 2)}
           </span>
           {!collapsed && (

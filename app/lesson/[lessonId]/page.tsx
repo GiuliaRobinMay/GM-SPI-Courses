@@ -171,8 +171,8 @@ export default function LessonPage({
 
           {item.transcript && tab === "highlights" && study && (
             <section className="space-y-4">
-              <div className="card bg-gradient-to-br from-indigo-50 to-white p-5">
-                <p className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.06em] text-indigo-600">
+              <div className="card bg-gradient-to-br from-brand-violet/5 to-white p-5">
+                <p className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.06em] text-brand-violet">
                   <Sparkles className="size-3.5" />
                   In short
                 </p>
@@ -204,7 +204,7 @@ export default function LessonPage({
                 <ul className="space-y-3">
                   {study.highlights.map((h, i) => (
                     <li key={i} className="flex gap-3">
-                      <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-indigo-500" />
+                      <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-violet" />
                       <p className="text-[14px] leading-relaxed text-slate-700">
                         {h.text}
                       </p>
@@ -255,7 +255,7 @@ export default function LessonPage({
                           href={l}
                           target="_blank"
                           rel="noreferrer"
-                          className="break-all text-[13px] text-indigo-600 hover:underline"
+                          className="break-all text-[13px] text-brand-violet hover:underline"
                         >
                           {l}
                         </a>
@@ -319,7 +319,7 @@ export default function LessonPage({
                           <span
                             className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold ${
                               done
-                                ? "bg-emerald-500 text-white"
+                                ? "bg-brand-green text-white"
                                 : "bg-slate-100 text-slate-600"
                             }`}
                           >
@@ -493,7 +493,7 @@ export default function LessonPage({
                   href={item.sourceUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 break-all text-indigo-600 hover:underline"
+                  className="inline-flex items-center gap-1 break-all text-brand-violet hover:underline"
                 >
                   Open
                   <ExternalLink className="size-3 shrink-0" />
@@ -507,7 +507,7 @@ export default function LessonPage({
                   href={item.videoUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 break-all text-indigo-600 hover:underline"
+                  className="inline-flex items-center gap-1 break-all text-brand-violet hover:underline"
                 >
                   Open
                   <ExternalLink className="size-3 shrink-0" />
@@ -536,7 +536,7 @@ export default function LessonPage({
               Edit
             </button>
             <button
-              className="btn-ghost text-rose-600 hover:bg-rose-50"
+              className="btn-ghost text-brand-red hover:bg-brand-red/10"
               onClick={() => {
                 if (confirm(`Delete "${item.title}"?`)) {
                   removeLesson(item.id);

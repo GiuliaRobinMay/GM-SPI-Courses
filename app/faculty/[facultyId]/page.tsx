@@ -73,7 +73,7 @@ export default function FacultyPage({
             Edit
           </button>
           <button
-            className="btn-ghost text-rose-600 hover:bg-rose-50"
+            className="btn-ghost text-brand-red hover:bg-brand-red/10"
             onClick={() => {
               if (
                 confirm(
