@@ -3,10 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ChevronRight, LayoutDashboard, PanelLeft, PanelLeftClose, Plus, Settings } from "lucide-react";
+import {
+  ChevronRight, FolderPlus, LayoutDashboard, PanelLeft, PanelLeftClose,
+  Pencil, Plus, Settings,
+} from "lucide-react";
 import { useLibrary } from "@/lib/store";
 import { accent } from "@/lib/theme";
 import { CourseDialog } from "./CourseDialog";
+import { FacultyDialog } from "./FacultyDialog";
+import { LessonDialog } from "./LessonDialog";
 import type { Course } from "@/lib/types";
 import { FacultyIcon } from "./Icon";
 
@@ -18,7 +23,10 @@ export function Sidebar() {
   const pathname = usePathname();
   const { db, lessonsOf } = useLibrary();
   const [collapsed, setCollapsed] = useState(false);
-  const [dialogFor, setDialogFor] = useState<string | null>(null);
+  const [courseFor, setCourseFor] = useState<string | null>(null);
+  const [lessonFor, setLessonFor] = useState<string | null>(null);
+  const [facultyEdit, setFacultyEdit] = useState<string | null>(null);
+  const [newCollection, setNewCollection] = useState(false);
   const [shut, setShut] = useState<Set<string>>(loadShut);
 
   const you = db.creators.find((c) => c.isSelf);
@@ -100,26 +108,33 @@ export function Sidebar() {
             return (
               <div key={faculty.id}>
                 {!collapsed && (
-                  <div className="flex items-center gap-1 px-3 pb-1">
+                  <div className="group/head flex items-center gap-0.5 px-3 pb-1">
                     <button
                       onClick={() => toggle(faculty.id)}
                       className="flex min-w-0 flex-1 items-center gap-1.5 rounded-lg py-1 text-left"
                       aria-expanded={open}
                     >
                       <ChevronRight
-                        className={`size-3.5 shrink-0 text-slate-400 transition-transform ${
+                        className={`size-3.5 shrink-0 text-slate-500 transition-transform ${
                           open ? "rotate-90" : ""
                         }`}
                       />
-                      <span className="truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                      <span className="truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600">
                         {faculty.name}
                       </span>
-                      <span className="text-[11px] tabular-nums text-slate-300">
+                      <span className="text-[11px] tabular-nums text-slate-400">
                         {courses.length}
                       </span>
                     </button>
                     <button
-                      onClick={() => setDialogFor(faculty.id)}
+                      onClick={() => setFacultyEdit(faculty.id)}
+                      className="btn-quiet px-1 py-1 opacity-0 transition group-hover/head:opacity-100"
+                      aria-label={`Rename ${faculty.name}`}
+                    >
+                      <Pencil className="size-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setCourseFor(faculty.id)}
                       className="btn-quiet px-1 py-1"
                       aria-label={`New course in ${faculty.name}`}
                     >
@@ -136,7 +151,6 @@ export function Sidebar() {
                         course={course}
                         collapsed={collapsed}
                         active={pathname === `/course/${course.id}`}
-                        lessons={lessonsOf(course.id).length}
                       />
                     ))}
                   </div>
@@ -153,25 +167,43 @@ export function Sidebar() {
                   course={course}
                   collapsed={collapsed}
                   active={pathname === `/course/${course.id}`}
-                  lessons={lessonsOf(course.id).length}
                 />
               ))}
             </div>
           )}
 
-          {collapsed && (
+          {collapsed ? (
             <button
-              onClick={() => setDialogFor(db.faculties[0]?.id ?? "")}
+              onClick={() => setCourseFor(db.faculties[0]?.id ?? "")}
               className="mx-auto flex size-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-900"
               aria-label="New course"
             >
               <Plus className="size-4" />
             </button>
-          )}
+          ) : null}
         </div>
       </div>
 
       <div className="mt-auto border-t border-hairline px-3 py-3">
+        <div className="mb-1 flex flex-col gap-0.5">
+          <button
+            onClick={() => setLessonFor("")}
+            title={collapsed ? "Add material" : undefined}
+            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+          >
+            <Plus className="size-[18px] shrink-0" strokeWidth={1.8} />
+            {!collapsed && <span>Add material</span>}
+          </button>
+          <button
+            onClick={() => setNewCollection(true)}
+            title={collapsed ? "New collection" : undefined}
+            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+          >
+            <FolderPlus className="size-[18px] shrink-0" strokeWidth={1.8} />
+            {!collapsed && <span>New collection</span>}
+          </button>
+        </div>
+
         <Link
           href="/settings"
           title={collapsed ? "Settings" : undefined}
@@ -203,10 +235,17 @@ export function Sidebar() {
       </div>
 
       <CourseDialog
-        open={dialogFor !== null}
-        onClose={() => setDialogFor(null)}
-        facultyId={dialogFor ?? undefined}
+        open={courseFor !== null}
+        onClose={() => setCourseFor(null)}
+        facultyId={courseFor ?? undefined}
       />
+      <LessonDialog open={lessonFor !== null} onClose={() => setLessonFor(null)} />
+      <FacultyDialog
+        open={facultyEdit !== null}
+        onClose={() => setFacultyEdit(null)}
+        facultyId={facultyEdit ?? undefined}
+      />
+      <FacultyDialog open={newCollection} onClose={() => setNewCollection(false)} />
     </aside>
   );
 }
@@ -216,12 +255,10 @@ function CourseLink({
   course,
   collapsed,
   active,
-  lessons,
 }: {
   course: Course;
   collapsed: boolean;
   active: boolean;
-  lessons: number;
 }) {
   const tone = accent(course.accent);
   return (
@@ -239,14 +276,7 @@ function CourseLink({
       >
         <FacultyIcon name={course.icon ?? "book"} className="size-4" />
       </span>
-      {!collapsed && (
-        <>
-          <span className="truncate">{course.title}</span>
-          <span className="ml-auto text-[12px] tabular-nums text-slate-400">
-            {lessons}
-          </span>
-        </>
-      )}
+      {!collapsed && <span className="truncate">{course.title}</span>}
     </Link>
   );
 }

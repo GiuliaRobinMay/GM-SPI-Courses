@@ -83,6 +83,11 @@ interface LibraryValue {
 
   addCreator(input: Partial<Creator> & { name: string }): Creator;
 
+  /**
+   * Write a hand-set order across the study plan. Takes the full ordered
+   * list, so one move renumbers everything and the result cannot drift.
+   */
+  reorderPlan(items: { id: string; kind: "course" | "lesson" }[]): void;
   /** Add the SPI course list, skipping any course already present. */
   addStarterCourses(): number;
   /** Merge course files into the library without removing anything. */
@@ -385,6 +390,19 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
    * Put the SPI courses into whatever library already exists. Ids are stable,
    * so running it twice adds nothing the second time and no lesson is touched.
    */
+  const reorderPlan: LibraryValue["reorderPlan"] = useCallback((items) => {
+    const position = new Map(items.map((item, index) => [item.id, index]));
+    setDb((prev) => ({
+      ...prev,
+      courses: prev.courses.map((c) =>
+        position.has(c.id) ? { ...c, planOrder: position.get(c.id) } : c,
+      ),
+      lessons: prev.lessons.map((l) =>
+        position.has(l.id) ? { ...l, planOrder: position.get(l.id) } : l,
+      ),
+    }));
+  }, []);
+
   const addStarterCourses: LibraryValue["addStarterCourses"] = useCallback(() => {
     let added = 0;
     setDb((prev) => {
@@ -434,6 +452,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       setLessonStatus,
       regenerateStudy,
       addCreator,
+      reorderPlan,
       addStarterCourses,
       importPackages,
       replaceAll,
@@ -445,7 +464,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       lessonsOf, courseProgress, search, addFaculty, updateFaculty,
       removeFaculty, addCourse, updateCourse, removeCourse, addLesson,
       updateLesson, removeLesson, setLessonStatus, regenerateStudy, addCreator,
-      addStarterCourses, importPackages, replaceAll, resetToDemo, clearAll,
+      reorderPlan, addStarterCourses, importPackages, replaceAll, resetToDemo, clearAll,
     ],
   );
 

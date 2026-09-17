@@ -7,7 +7,7 @@
   /* Named colours become utilities: bg-canvas, border-hairline, text-ink… */
   --color-canvas: #f6f7f9;
   --color-surface: #ffffff;
-  --color-hairline: #e8e9ee;
+  --color-hairline: #d5d8e0;
   --color-ink: #14161c;
   --color-muted: #6b7180;
 
@@ -55,13 +55,13 @@
 }
 
 @utility card-hover {
-  @apply transition hover:border-slate-300 hover:shadow-[0_6px_24px_-12px_rgb(20_22_28/0.18)];
+  @apply transition hover:border-slate-400 hover:shadow-[0_6px_24px_-12px_rgb(20_22_28/0.22)];
 }
 
 @utility chip {
   @apply inline-flex items-center gap-1.5 rounded-full border border-hairline
     bg-white px-3 py-1.5 text-[13px] font-medium text-slate-600 transition
-    hover:border-slate-300 hover:text-slate-900;
+    hover:border-slate-400 hover:text-slate-900;
 }
 
 @utility chip-active {
@@ -79,7 +79,7 @@
 
 @utility btn-ghost {
   @apply btn border border-hairline bg-white text-slate-700
-    hover:border-slate-300 hover:bg-slate-50;
+    hover:border-slate-400 hover:bg-slate-50;
 }
 
 @utility btn-quiet {

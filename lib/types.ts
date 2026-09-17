@@ -83,6 +83,8 @@ export interface Course {
   priority?: Priority;
   /** The day you mean to work on it, as yyyy-mm-dd. */
   plannedFor?: string;
+  /** Hand-set position on the study plan. Beats priority when present. */
+  planOrder?: number;
 
   createdAt: string;
   updatedAt: string;
@@ -103,6 +105,8 @@ export interface Lesson {
   priority?: Priority;
   /** The day you mean to study it, as yyyy-mm-dd. */
   plannedFor?: string;
+  /** Hand-set position on the study plan. Beats priority when present. */
+  planOrder?: number;
 
   /** Provenance — always keep track of where material came from */
   sourceKind: SourceKind;

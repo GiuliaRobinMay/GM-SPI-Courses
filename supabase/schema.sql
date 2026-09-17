@@ -152,6 +152,7 @@ alter table public.courses add column if not exists kind        text not null de
 alter table public.courses add column if not exists icon        text;
 alter table public.courses add column if not exists priority    text;
 alter table public.courses add column if not exists planned_for date;
+alter table public.courses add column if not exists plan_order  integer;
 alter table public.courses add column if not exists subtitle    text;
 alter table public.courses add column if not exists description text;
 alter table public.courses add column if not exists creator_id  text;
@@ -164,6 +165,7 @@ alter table public.courses add column if not exists favorite    boolean not null
 
 alter table public.lessons add column if not exists priority         text;
 alter table public.lessons add column if not exists planned_for      date;
+alter table public.lessons add column if not exists plan_order       integer;
 alter table public.lessons add column if not exists creator_id       text;
 alter table public.lessons add column if not exists source_kind      text not null default 'transcript';
 alter table public.lessons add column if not exists video_url        text;
