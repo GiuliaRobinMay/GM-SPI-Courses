@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { CalendarDays, ChevronDown, ChevronUp, Clock, Flag } from "lucide-react";
+import { useState } from "react";
+import { CalendarDays, Clock, Flag, GripHorizontal } from "lucide-react";
 import { useLibrary } from "@/lib/store";
 import { accent } from "@/lib/theme";
 import { FacultyIcon } from "./Icon";
@@ -14,7 +15,6 @@ interface PlanItem {
   kind: "course" | "lesson";
   href: string;
   title: string;
-  context: string;
   icon: string;
   tone: ReturnType<typeof accent>;
   priority: Priority;
@@ -58,8 +58,9 @@ const isOverdue = (iso?: string) =>
  * whole list, so the two orderings never half-apply.
  */
 export function StudyPlan() {
-  const { db, course, lessonsOf, creatorName, reorderPlan } = useLibrary();
+  const { db, course, lessonsOf, reorderPlan } = useLibrary();
   const router = useRouter();
+  const [dragging, setDragging] = useState<number | null>(null);
 
   const items: PlanItem[] = [
     ...db.courses
@@ -72,7 +73,6 @@ export function StudyPlan() {
           kind: "course" as const,
           href: `/course/${c.id}`,
           title: c.title,
-          context: creatorName(c.creatorId),
           icon: c.icon ?? "book",
           tone: accent(c.accent),
           priority: c.priority!,
@@ -93,7 +93,6 @@ export function StudyPlan() {
           kind: "lesson" as const,
           href: `/lesson/${l.id}`,
           title: l.title,
-          context: parent?.title ?? "Lesson",
           icon: parent?.icon ?? "book",
           tone: accent(parent?.accent),
           priority: l.priority!,
@@ -117,11 +116,12 @@ export function StudyPlan() {
     );
   });
 
-  function move(index: number, delta: number) {
+  /** Lift a row out of the list and drop it in at another position. */
+  function moveTo(from: number, to: number) {
+    if (from === to || to < 0 || to >= items.length) return;
     const next = [...items];
-    const target = index + delta;
-    if (target < 0 || target >= next.length) return;
-    [next[index], next[target]] = [next[target], next[index]];
+    const [lifted] = next.splice(from, 1);
+    next.splice(to, 0, lifted);
     reorderPlan(next.map(({ id, kind }) => ({ id, kind })));
   }
 
@@ -148,35 +148,30 @@ export function StudyPlan() {
       {items.map((item, index) => {
         const day = formatDay(item.plannedFor);
         const style = PRIORITY_STYLE[item.priority];
-        const started = item.done > 0;
         return (
-          <div key={item.id} className="card card-hover flex items-stretch gap-1 p-3.5">
-            <div className="flex flex-col justify-center gap-0.5 pr-1">
-              <button
-                onClick={() => move(index, -1)}
-                disabled={index === 0}
-                aria-label={`Move ${item.title} up`}
-                className="rounded-md p-0.5 text-slate-300 transition hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-30"
-              >
-                <ChevronUp className="size-4" />
-              </button>
-              <button
-                onClick={() => move(index, 1)}
-                disabled={index === items.length - 1}
-                aria-label={`Move ${item.title} down`}
-                className="rounded-md p-0.5 text-slate-300 transition hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-30"
-              >
-                <ChevronDown className="size-4" />
-              </button>
-            </div>
-
-            <span className="w-6 shrink-0 self-center text-center text-[13px] font-semibold tabular-nums text-slate-400">
-              {index + 1}
-            </span>
+          <div
+            key={item.id}
+            draggable
+            onDragStart={() => setDragging(index)}
+            onDragEnd={() => setDragging(null)}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (dragging !== null) moveTo(dragging, index);
+              setDragging(null);
+            }}
+            className={`card card-hover flex items-center gap-3 px-3 py-2.5 ${
+              dragging === index ? "opacity-40" : ""
+            }`}
+          >
+            <GripHorizontal
+              className="size-4 shrink-0 cursor-grab text-slate-300 transition active:cursor-grabbing"
+              aria-hidden
+            />
 
             <button
               onClick={() => router.push(item.href)}
-              className="flex min-w-0 flex-1 items-center gap-3.5 text-left"
+              className="flex min-w-0 flex-1 items-center gap-3 text-left"
             >
               <span
                 className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${item.tone.soft} ${item.tone.softText}`}
@@ -185,45 +180,39 @@ export function StudyPlan() {
               </span>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-slate-900">{item.title}</p>
-
-                <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-slate-500">
-                  <span className="truncate">{item.context}</span>
-                  {item.kind === "course" && (
-                    <>
-                      <span className="text-slate-300">·</span>
-                      <span>
-                        {item.total > 0
-                          ? `${item.total} lesson${item.total === 1 ? "" : "s"}`
-                          : "no lessons yet"}
-                      </span>
-                    </>
-                  )}
-                  {item.timed && (
-                    <>
-                      <span className="text-slate-300">·</span>
-                      <span className="inline-flex items-center gap-1">
-                        <Clock className="size-3" />
-                        {formatLength(item.minutes)}
-                      </span>
-                    </>
-                  )}
+                <p className="truncate text-[15px] font-semibold leading-tight text-slate-900">
+                  {item.title}
                 </p>
 
-                {item.kind === "course" && item.total > 0 && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <div className="max-w-[180px] flex-1">
-                      <Progress done={item.done} total={item.total} />
-                    </div>
-                    <span className="text-[11px] tabular-nums text-slate-400">
-                      {started ? `${item.done}/${item.total}` : "not started"}
+                <div className="mt-1 flex items-center gap-2">
+                  <p className="flex shrink-0 items-center gap-1.5 text-[12px] text-slate-500">
+                    <span>
+                      {item.kind === "lesson"
+                        ? "1 lesson"
+                        : item.total > 0
+                          ? `${item.total} lesson${item.total === 1 ? "" : "s"}`
+                          : "no lessons yet"}
                     </span>
-                  </div>
-                )}
+                    {item.timed && (
+                      <>
+                        <span className="text-slate-300">·</span>
+                        <span className="inline-flex items-center gap-1">
+                          <Clock className="size-3" />
+                          {formatLength(item.minutes)}
+                        </span>
+                      </>
+                    )}
+                  </p>
+                  {item.total > 0 && (
+                    <span className="w-16 shrink-0">
+                      <Progress done={item.done} total={item.total} />
+                    </span>
+                  )}
+                </div>
               </div>
             </button>
 
-            <div className="flex shrink-0 items-center gap-2 self-center">
+            <div className="flex shrink-0 items-center gap-2">
               {day && (
                 <span
                   className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium ${

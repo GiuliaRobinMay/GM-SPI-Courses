@@ -55,7 +55,7 @@ export default function DiscoverPage() {
         <div className="mb-3">
           <h2 className="section-title">Your study plan</h2>
           <p className="muted">
-            What you decided to do next, highest priority first.
+            What you decided to do next. Drag by the handle to reorder.
           </p>
         </div>
         <StudyPlan />
