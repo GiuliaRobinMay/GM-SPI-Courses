@@ -9,7 +9,18 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
  * it runs with no backend at all.
  */
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+/*
+ * Supabase renamed the browser-safe key: older projects call it the anon key,
+ * newer ones the publishable key. Accept either name so whichever the
+ * dashboard hands you works without editing anything.
+ *
+ * Both must be referenced literally — Next.js substitutes NEXT_PUBLIC_ vars
+ * at build time by matching the source text, not by reading process.env.
+ */
+const anonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 export const isSupabaseConfigured = Boolean(url && anonKey);
 
