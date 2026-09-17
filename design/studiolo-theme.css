@@ -1,0 +1,416 @@
+/* ==========================================================================
+   Studiolo — look and feel
+   --------------------------------------------------------------------------
+   Plain CSS. No framework, no build step. Drop this in, link it, and use the
+   class names below.
+
+       <link rel="stylesheet" href="studiolo-theme.css">
+
+   The whole thing rests on three rules:
+
+     1. Four colours, and no others. Everything else is neutral grey.
+     2. Colour is decoration, never meaning. It rotates so neighbours differ.
+     3. Lines are visible. Structure you cannot see is not structure.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Tokens
+   -------------------------------------------------------------------------- */
+
+:root {
+  /* The four. Nothing else may be a hue. */
+  --brand-violet: #543ff8;
+  --brand-red: #ed1748;
+  --brand-green: #20a375;
+  --brand-orange: #e47d17;
+
+  /* Deepened twins, for the second stop of a gradient. Same hue, so depth
+     never smuggles in a fifth colour. */
+  --brand-violet-deep: #3b2ac9;
+  --brand-red-deep: #bd0f36;
+  --brand-green-deep: #17805b;
+  --brand-orange-deep: #b86111;
+
+  /* Surfaces */
+  --canvas: #f6f7f9;   /* page behind the cards */
+  --surface: #ffffff;  /* the cards themselves */
+  --hairline: #d5d8e0; /* every border. Deliberately not faint. */
+
+  /* Text */
+  --ink: #14161c;
+  --ink-soft: #334155;
+  --muted: #64748b;
+  --faint: #94a3b8;
+  --ghost: #cbd5e1;
+
+  /* Neutral fills */
+  --grey-50: #f8fafc;
+  --grey-100: #f1f5f9;
+
+  /* Shape */
+  --radius-card: 16px;
+  --radius-control: 12px;
+  --radius-chip: 10px;
+  --radius-pill: 9999px;
+
+  --shadow-hover: 0 6px 24px -12px rgb(20 22 28 / 0.22);
+
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+
+  color-scheme: light;
+}
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: color-mix(in srgb, var(--brand-violet) 22%, white); }
+
+:focus-visible {
+  outline: 2px solid var(--brand-violet);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Type
+   -------------------------------------------------------------------------- */
+
+.page-title {                 /* once per page */
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.section-title {              /* above a group */
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.row-title {                  /* the thing itself, in a list */
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.muted {                      /* the quiet line underneath */
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.eyebrow {                    /* NEXT UP, SPI COURSES */
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Card — the one container
+   -------------------------------------------------------------------------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+}
+
+/* Add to a card that can be clicked. Nothing moves; the edge sharpens. */
+.card--hover {
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.card--hover:hover {
+  border-color: var(--faint);
+  box-shadow: var(--shadow-hover);
+}
+
+/* --------------------------------------------------------------------------
+   Buttons
+   -------------------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: var(--radius-control);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 150ms, border-color 150ms, color 150ms;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn--primary { background: var(--brand-violet); color: #fff; }
+.btn--primary:hover:not(:disabled) { background: var(--brand-violet-deep); }
+
+.btn--ghost {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  color: var(--ink-soft);
+}
+.btn--ghost:hover:not(:disabled) { border-color: var(--faint); background: var(--grey-50); }
+
+.btn--quiet { background: transparent; color: var(--muted); }
+.btn--quiet:hover:not(:disabled) { background: var(--grey-100); color: var(--ink); }
+
+/* Destructive is red, and only red. */
+.btn--danger { background: transparent; color: var(--brand-red); }
+.btn--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--brand-red) 10%, white);
+}
+
+/* --------------------------------------------------------------------------
+   Chips — filters, tabs
+   -------------------------------------------------------------------------- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 150ms, color 150ms;
+}
+.chip:hover { border-color: var(--faint); color: var(--ink); }
+
+/* The selected one goes near-black, not brand. Colour stays decorative. */
+.chip--active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+.chip--active:hover { color: #fff; border-color: var(--ink); }
+
+/* --------------------------------------------------------------------------
+   Form controls
+   -------------------------------------------------------------------------- */
+
+.field {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.field::placeholder { color: var(--faint); }
+.field:focus {
+  outline: 0;
+  border-color: color-mix(in srgb, var(--brand-violet) 60%, white);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-violet) 10%, transparent);
+}
+
+.label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+/* --------------------------------------------------------------------------
+   Accents
+   --------------------------------------------------------------------------
+   Put .accent-violet | .accent-red | .accent-green | .accent-orange on a
+   container. Everything inside reads --accent and --accent-deep from it.
+
+   Rotate them in list order — item 1 violet, 2 red, 3 green, 4 orange, 5
+   violet again — so no two neighbours match. Do not encode meaning in which
+   colour something gets.
+   -------------------------------------------------------------------------- */
+
+.accent-violet { --accent: var(--brand-violet); --accent-deep: var(--brand-violet-deep); }
+.accent-red    { --accent: var(--brand-red);    --accent-deep: var(--brand-red-deep); }
+.accent-green  { --accent: var(--brand-green);  --accent-deep: var(--brand-green-deep); }
+.accent-orange { --accent: var(--brand-orange); --accent-deep: var(--brand-orange-deep); }
+
+/* The soft tinted square behind an icon. The signature element. */
+.icon-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: var(--radius-chip);
+  background: color-mix(in srgb, var(--accent, var(--brand-violet)) 10%, white);
+  color: var(--accent, var(--brand-violet));
+}
+.icon-chip svg { width: 18px; height: 18px; stroke-width: 1.8; }
+
+.icon-chip--sm { width: 28px; height: 28px; border-radius: 8px; }
+.icon-chip--sm svg { width: 16px; height: 16px; }
+
+.icon-chip--lg { width: 48px; height: 48px; border-radius: 14px; }
+.icon-chip--lg svg { width: 24px; height: 24px; }
+
+/* A cover block: one colour into a darker version of itself. */
+.cover {
+  background: linear-gradient(
+    135deg,
+    var(--accent, var(--brand-violet)),
+    var(--accent-deep, var(--brand-violet-deep))
+  );
+  color: #fff;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+}
+
+/* --------------------------------------------------------------------------
+   Badges
+   -------------------------------------------------------------------------- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--grey-100);
+  color: var(--muted);
+}
+
+.badge--green  { background: color-mix(in srgb, var(--brand-green) 12%, white);  color: var(--brand-green); }
+.badge--orange { background: color-mix(in srgb, var(--brand-orange) 12%, white); color: var(--brand-orange); }
+.badge--red    { background: color-mix(in srgb, var(--brand-red) 12%, white);    color: var(--brand-red); }
+.badge--violet { background: color-mix(in srgb, var(--brand-violet) 12%, white); color: var(--brand-violet); }
+
+/* --------------------------------------------------------------------------
+   Progress
+   -------------------------------------------------------------------------- */
+
+.progress {
+  height: 6px;
+  width: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--grey-100);
+  overflow: hidden;
+}
+.progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--brand-violet);
+  transition: width 200ms;
+}
+
+/* --------------------------------------------------------------------------
+   Shell — sidebar, top bar, content
+   -------------------------------------------------------------------------- */
+
+.shell { display: flex; min-height: 100dvh; }
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  width: 276px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-right: 1px solid var(--hairline);
+}
+
+.sidebar__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius-control);
+  font-size: 14px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: background-color 150ms, color 150ms;
+}
+.sidebar__item:hover { background: var(--grey-50); color: var(--ink); }
+.sidebar__item--active { background: var(--grey-100); color: var(--ink); font-weight: 500; }
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--canvas) 85%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.content {
+  width: 100%;
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+/* Vertical rhythm between sections. */
+.stack > * + * { margin-top: 32px; }
+.stack-sm > * + * { margin-top: 8px; }
+
+/* --------------------------------------------------------------------------
+   Notes for whoever builds the next thing
+   --------------------------------------------------------------------------
+
+   Colour
+     Only the four. If something needs to stand out and none of them fits,
+     it does not need to stand out — change its weight or its spacing.
+     Green means done. Orange means in progress, or late. Red means high
+     priority or destructive. Violet is the primary action. Grey is
+     everything else, and most of the interface is grey.
+
+   Borders
+     Every card and divider is 1px of --hairline. It is darker than most
+     design systems pick, on purpose: at #e8e9ee the structure disappeared.
+
+   Density
+     A list row is 10px vertical padding. A card is 20px. Sections are 32px
+     apart. When in doubt, tighten the row and keep the gap between groups.
+
+   Hierarchy in a list row
+     Icon chip, then a 15px semibold title, then one 13px grey line holding
+     everything else. If a third line is wanted, something on line two is
+     not worth showing.
+
+   Type scale
+     26 / 19 / 15 / 14 / 13 / 12 / 11. Nothing in between.
+
+   Radius
+     16px containers, 12px controls, 10px icon chips, pills for badges.
+
+   -------------------------------------------------------------------------- */
