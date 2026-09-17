@@ -131,3 +131,53 @@ begin
     );
   end loop;
 end $$;
+
+-- ------------------------------------------------------------- convergence
+--
+-- `create table if not exists` skips a table that already exists, new columns
+-- and all, so re-running this file on an older database silently leaves it
+-- behind. Every column the app writes is therefore also added explicitly
+-- here, which is a no-op on a fresh database and repairs an older one.
+
+alter table public.faculties add column if not exists icon        text not null default 'book';
+alter table public.faculties add column if not exists accent      text not null default 'violet';
+alter table public.faculties add column if not exists description text;
+alter table public.faculties add column if not exists "order"     integer not null default 0;
+
+alter table public.creators  add column if not exists handle  text;
+alter table public.creators  add column if not exists url     text;
+alter table public.creators  add column if not exists is_self boolean not null default false;
+
+alter table public.courses add column if not exists kind        text not null default 'course';
+alter table public.courses add column if not exists icon        text;
+alter table public.courses add column if not exists priority    text;
+alter table public.courses add column if not exists planned_for date;
+alter table public.courses add column if not exists subtitle    text;
+alter table public.courses add column if not exists description text;
+alter table public.courses add column if not exists creator_id  text;
+alter table public.courses add column if not exists source_url  text;
+alter table public.courses add column if not exists topics      text[] not null default '{}';
+alter table public.courses add column if not exists accent      text not null default 'violet';
+alter table public.courses add column if not exists track       text;
+alter table public.courses add column if not exists track_order integer;
+alter table public.courses add column if not exists favorite    boolean not null default false;
+
+alter table public.lessons add column if not exists priority         text;
+alter table public.lessons add column if not exists planned_for      date;
+alter table public.lessons add column if not exists creator_id       text;
+alter table public.lessons add column if not exists source_kind      text not null default 'transcript';
+alter table public.lessons add column if not exists video_url        text;
+alter table public.lessons add column if not exists source_url       text;
+alter table public.lessons add column if not exists source_file_name text;
+alter table public.lessons add column if not exists section          text;
+alter table public.lessons add column if not exists section_order    integer;
+alter table public.lessons add column if not exists content          text;
+alter table public.lessons add column if not exists notes            text;
+alter table public.lessons add column if not exists topics           text[] not null default '{}';
+alter table public.lessons add column if not exists duration_minutes integer;
+alter table public.lessons add column if not exists recorded_at      timestamptz;
+alter table public.lessons add column if not exists study            jsonb;
+
+-- PostgREST caches the schema; without this it keeps reporting new columns
+-- as missing until it happens to reload.
+notify pgrst, 'reload schema';
