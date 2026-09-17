@@ -10,8 +10,8 @@
 
 import type { BackupMeta, LoadResult, PersistenceAdapter } from "../persistence";
 import type {
-  Course, Creator, Database, Faculty, Lesson, LessonStatus, SourceKind,
-  AccentToken, StudyOutput,
+  Course, CourseKind, Creator, Database, Faculty, Lesson, LessonStatus,
+  Priority, SourceKind, AccentToken, StudyOutput,
 } from "../types";
 import { getSupabase } from "./client";
 
@@ -49,7 +49,9 @@ const rowToCreator = (r: Row): Creator => ({
 });
 
 const courseToRow = (c: Course): Row => ({
-  id: c.id, faculty_id: c.facultyId, title: c.title,
+  id: c.id, faculty_id: c.facultyId, kind: c.kind ?? "course", title: c.title,
+  icon: c.icon ?? null, priority: c.priority ?? null,
+  planned_for: c.plannedFor ?? null,
   subtitle: c.subtitle ?? null, description: c.description ?? null,
   creator_id: c.creatorId ?? null, source_url: c.sourceUrl ?? null,
   topics: c.topics ?? [], accent: c.accent, track: c.track ?? null,
@@ -60,7 +62,11 @@ const courseToRow = (c: Course): Row => ({
 const rowToCourse = (r: Row): Course => ({
   id: r.id as string,
   facultyId: r.faculty_id as string,
+  kind: (r.kind as CourseKind) ?? "course",
   title: r.title as string,
+  icon: (r.icon as string) ?? undefined,
+  priority: (r.priority as Priority) ?? undefined,
+  plannedFor: (r.planned_for as string) ?? undefined,
   subtitle: (r.subtitle as string) ?? undefined,
   description: (r.description as string) ?? undefined,
   creatorId: (r.creator_id as string) ?? "cr-self",
@@ -77,6 +83,7 @@ const rowToCourse = (r: Row): Course => ({
 const lessonToRow = (l: Lesson): Row => ({
   id: l.id, course_id: l.courseId, title: l.title,
   creator_id: l.creatorId ?? null, order: l.order, status: l.status,
+  priority: l.priority ?? null, planned_for: l.plannedFor ?? null,
   source_kind: l.sourceKind, video_url: l.videoUrl ?? null,
   source_url: l.sourceUrl ?? null, source_file_name: l.sourceFileName ?? null,
   section: l.section ?? null, section_order: l.sectionOrder ?? null,
@@ -94,6 +101,8 @@ const rowToLesson = (r: Row): Lesson => ({
   creatorId: (r.creator_id as string) ?? undefined,
   order: (r.order as number) ?? 0,
   status: r.status as LessonStatus,
+  priority: (r.priority as Priority) ?? undefined,
+  plannedFor: (r.planned_for as string) ?? undefined,
   sourceKind: r.source_kind as SourceKind,
   videoUrl: (r.video_url as string) ?? undefined,
   sourceUrl: (r.source_url as string) ?? undefined,
