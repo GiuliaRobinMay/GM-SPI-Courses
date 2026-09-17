@@ -57,15 +57,15 @@ export function FacultyDialog({
     <Modal
       open={open}
       onClose={onClose}
-      title={existing ? "Edit faculty" : "New faculty"}
-      description="A faculty is a field of study in your sidebar — it holds courses."
+      title={existing ? "Edit collection" : "New collection"}
+      description="A collection groups courses in your sidebar — SPI courses, resources, anything else."
       footer={
         <>
           <button className="btn-ghost" onClick={onClose}>
             Cancel
           </button>
           <button className="btn-primary" onClick={submit} disabled={!name.trim()}>
-            {existing ? "Save changes" : "Create faculty"}
+            {existing ? "Save changes" : "Create collection"}
           </button>
         </>
       }
@@ -75,7 +75,7 @@ export function FacultyDialog({
           <input
             autoFocus
             className="field"
-            placeholder="Social & Content"
+            placeholder="SPI courses"
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submit()}
@@ -85,7 +85,7 @@ export function FacultyDialog({
         <Field label="Description" hint="Optional — what belongs in here.">
           <input
             className="field"
-            placeholder="Everything that gets made, posted and measured."
+            placeholder="Courses from the SPI community."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />

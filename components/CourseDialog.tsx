@@ -120,7 +120,7 @@ export function CourseDialog({
           />
         </Field>
 
-        <Field label="Faculty">
+        <Field label="Collection" hint="Move this course by picking another.">
           <select
             className="field"
             value={faculty}

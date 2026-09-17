@@ -28,7 +28,7 @@ export default function FacultyPage({
   if (!fac) {
     return (
       <EmptyState
-        title="Faculty not found"
+        title="Collection not found"
         body="It may have been deleted."
         action={
           <Link href="/" className="btn-ghost">
@@ -77,7 +77,7 @@ export default function FacultyPage({
             onClick={() => {
               if (
                 confirm(
-                  `Delete "${fac.name}" and its ${courses.length} course(s) and ${lessonCount} lesson(s)? This cannot be undone.`,
+                  `Delete the collection "${fac.name}", its ${courses.length} course(s) and ${lessonCount} lesson(s)? This cannot be undone.`,
                 )
               ) {
                 removeFaculty(fac.id);

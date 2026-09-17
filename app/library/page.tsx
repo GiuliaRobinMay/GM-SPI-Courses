@@ -24,7 +24,7 @@ export default function LibraryPage() {
           <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-slate-900">
             Library
           </h1>
-          <p className="muted mt-1">Every course you keep, across all faculties.</p>
+          <p className="muted mt-1">Every course you keep, across all collections.</p>
         </div>
         <button className="btn-primary" onClick={() => setCourseOpen(true)}>
           <Plus className="size-4" />

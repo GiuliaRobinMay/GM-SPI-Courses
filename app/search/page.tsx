@@ -33,7 +33,7 @@ function Results() {
 
       {faculties.length > 0 && (
         <section>
-          <h2 className="section-title mb-3">Faculties</h2>
+          <h2 className="section-title mb-3">Collections</h2>
           <div className="flex flex-wrap gap-2">
             {faculties.map((f) => (
               <Link key={f.id} href={`/faculty/${f.id}`} className="chip">

@@ -187,7 +187,7 @@ export default function SettingsPage() {
         />
         <Row
           title="Reset to the demo library"
-          body="Restores the sample faculties, courses and transcripts."
+          body="Restores the sample collections, courses and transcripts."
           action={
             <button
               className="btn-ghost"
@@ -205,7 +205,7 @@ export default function SettingsPage() {
         />
         <Row
           title="Start empty"
-          body="Deletes every faculty, course and lesson stored in this browser."
+          body="Deletes every collection, course and lesson stored in this browser."
           action={
             <button
               className="btn-ghost text-brand-red hover:bg-brand-red/10"
@@ -366,7 +366,7 @@ export default function SettingsPage() {
         <p className="font-medium text-slate-900">What is stored</p>
         <dl className="mt-3 grid grid-cols-2 gap-3 text-[13px] sm:grid-cols-4">
           {[
-            ["Faculties", db.faculties.length],
+            ["Collections", db.faculties.length],
             ["Courses", db.courses.length],
             ["Lessons", db.lessons.length],
             ["Creators", db.creators.length],
