@@ -6,42 +6,35 @@
 -- Design notes
 --  * Ids stay as the app's own strings ("co-ext-spi-smart-from-scratch"), so a
 --    library exported from the browser imports unchanged.
---  * Those ids are only unique per person — two people importing the same SPI
---    course would generate the same id — so every primary key is
---    (owner, id), and foreign keys are composite.
---  * Row level security keys everything to auth.uid(). Without it the anon key
---    shipped to the browser would let anyone read every library.
+--  * There is no sign-in and no per-person ownership. Row level security is
+--    off and the anon key alone reads and writes. A deliberate trade for a
+--    personal tool: nothing to log into, and no token that can expire.
 
 create extension if not exists pgcrypto;
 
 -- ---------------------------------------------------------------- faculties
 create table if not exists public.faculties (
-  owner       uuid not null references auth.users on delete cascade default auth.uid(),
-  id          text not null,
+  id          text primary key,
   name        text not null,
   icon        text not null default 'book',
   accent      text not null default 'violet',
   description text,
-  "order"     integer not null default 0,
-  primary key (owner, id)
+  "order"     integer not null default 0
 );
 
 -- ----------------------------------------------------------------- creators
 create table if not exists public.creators (
-  owner   uuid not null references auth.users on delete cascade default auth.uid(),
-  id      text not null,
+  id      text primary key,
   name    text not null,
   handle  text,
   url     text,
-  is_self boolean not null default false,
-  primary key (owner, id)
+  is_self boolean not null default false
 );
 
 -- ------------------------------------------------------------------ courses
 create table if not exists public.courses (
-  owner       uuid not null references auth.users on delete cascade default auth.uid(),
-  id          text not null,
-  faculty_id  text not null,
+  id          text primary key,
+  faculty_id  text not null references public.faculties (id) on delete cascade,
   kind        text not null default 'course',
   title       text not null,
   subtitle    text,
@@ -57,18 +50,15 @@ create table if not exists public.courses (
   planned_for date,
   favorite    boolean not null default false,
   created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now(),
-  primary key (owner, id),
-  foreign key (owner, faculty_id) references public.faculties (owner, id) on delete cascade
+  updated_at  timestamptz not null default now()
 );
 
-create index if not exists courses_faculty_idx on public.courses (owner, faculty_id);
+create index if not exists courses_faculty_idx on public.courses (faculty_id);
 
 -- ------------------------------------------------------------------ lessons
 create table if not exists public.lessons (
-  owner            uuid not null references auth.users on delete cascade default auth.uid(),
-  id               text not null,
-  course_id        text not null,
+  id               text primary key,
+  course_id        text not null references public.courses (id) on delete cascade,
   title            text not null,
   creator_id       text,
   "order"          integer not null default 0,
@@ -89,12 +79,10 @@ create table if not exists public.lessons (
   recorded_at      timestamptz,
   study            jsonb,
   created_at       timestamptz not null default now(),
-  updated_at       timestamptz not null default now(),
-  primary key (owner, id),
-  foreign key (owner, course_id) references public.courses (owner, id) on delete cascade
+  updated_at       timestamptz not null default now()
 );
 
-create index if not exists lessons_course_idx on public.lessons (owner, course_id);
+create index if not exists lessons_course_idx on public.lessons (course_id);
 
 -- Full text over everything worth searching, for "ask across the library".
 alter table public.lessons
@@ -111,24 +99,17 @@ alter table public.lessons
 
 create index if not exists lessons_search_idx on public.lessons using gin (search);
 
--- -------------------------------------------------------- row level security
-alter table public.faculties enable row level security;
-alter table public.creators  enable row level security;
-alter table public.courses   enable row level security;
-alter table public.lessons   enable row level security;
+-- ------------------------------------------------------- no row level security
+--
+-- Nothing here is per-person, so there is nothing to key a policy to. RLS
+-- stays off and the anon key has full access.
 
 do $$
 declare t text;
 begin
   foreach t in array array['faculties', 'creators', 'courses', 'lessons'] loop
     execute format('drop policy if exists own_rows on public.%I', t);
-    execute format(
-      'create policy own_rows on public.%I
-         for all
-         using (owner = auth.uid())
-         with check (owner = auth.uid())',
-      t
-    );
+    execute format('alter table public.%I disable row level security', t);
   end loop;
 end $$;
 

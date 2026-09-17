@@ -2,14 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  Download, LogOut, RotateCcw, Trash2, Upload,
+  Download, RotateCcw, Trash2, Upload,
 } from "lucide-react";
 import { useLibrary } from "@/lib/store";
 import {
   persistence, storageReport, isSupabaseConfigured,
   type BackupMeta,
 } from "@/lib/persistence";
-import { getSupabase } from "@/lib/supabase/client";
 
 export default function SettingsPage() {
   const { db, resetToDemo, clearAll, replaceAll } = useLibrary();
@@ -44,7 +43,7 @@ export default function SettingsPage() {
         </h1>
         <p className="muted mt-1">
           {isSupabaseConfigured
-            ? "Your library is stored in your account and follows you between devices."
+            ? "Your library is stored in the database, so it is the same on every device. No sign-in."
             : "Everything is kept in this browser. Nothing leaves this device."}
         </p>
       </div>
@@ -135,26 +134,6 @@ export default function SettingsPage() {
         />
       </section>
 
-      {isSupabaseConfigured && (
-        <section className="card divide-y divide-hairline">
-          <Row
-            title="Sign out"
-            body="Your library stays in your account."
-            action={
-              <button
-                className="btn-ghost"
-                onClick={async () => {
-                  await getSupabase()?.auth.signOut();
-                  window.location.reload();
-                }}
-              >
-                <LogOut className="size-4" />
-                Sign out
-              </button>
-            }
-          />
-        </section>
-      )}
 
       {backups.length > 0 && (
         <section className="card p-5">
@@ -235,7 +214,7 @@ export default function SettingsPage() {
               : ""}
             .{" "}
             {isSupabaseConfigured
-              ? "Stored in your Supabase account."
+              ? "Stored in your Supabase database."
               : "Stored in this browser (IndexedDB), so a library of many courses fits."}
           </p>
         )}

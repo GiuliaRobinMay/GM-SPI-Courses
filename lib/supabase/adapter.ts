@@ -1,6 +1,11 @@
 /**
  * The Supabase implementation of PersistenceAdapter.
  *
+ * There is no sign-in. The tables carry no per-person ownership and row level
+ * security is off, so the anon key alone reads and writes the library. That is
+ * a deliberate trade for a personal tool: no account, no token, no email, and
+ * nothing that can expire or fall out of sync with a clock.
+ *
  * `save` is called on every change, and a library with full transcripts runs
  * to several megabytes, so writing the whole snapshot each time would be
  * unusable. Instead the adapter remembers what it last wrote and sends only
@@ -165,9 +170,6 @@ export function createSupabaseAdapter(): PersistenceAdapter {
       const supabase = getSupabase();
       if (!supabase) return { status: "empty" };
 
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) return { status: "empty" }; // Signed out.
-
       const [faculties, creators, courses, lessons] = await Promise.all(
         TABLES.map((table) => supabase.from(table).select("*")),
       );
@@ -193,9 +195,6 @@ export function createSupabaseAdapter(): PersistenceAdapter {
     async save(db) {
       const supabase = getSupabase();
       if (!supabase) return;
-
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) return;
 
       const empty: Database = {
         version: 1, faculties: [], creators: [], courses: [], lessons: [],
