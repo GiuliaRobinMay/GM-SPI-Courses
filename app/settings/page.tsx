@@ -2,69 +2,27 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  CloudUpload, Download, FolderPlus, GraduationCap, LogOut, RotateCcw, Trash2, Upload,
+  Download, LogOut, RotateCcw, Trash2, Upload,
 } from "lucide-react";
 import { useLibrary } from "@/lib/store";
 import {
-  localPersistence, persistence, storageReport, isSupabaseConfigured,
+  persistence, storageReport, isSupabaseConfigured,
   type BackupMeta,
 } from "@/lib/persistence";
 import { getSupabase } from "@/lib/supabase/client";
-import { validatePackage, type ImportReport } from "@/lib/importer";
-import type { CoursePackage } from "@/lib/types";
 
 export default function SettingsPage() {
-  const { db, resetToDemo, clearAll, importPackages, replaceAll, addStarterCourses } =
-    useLibrary();
+  const { db, resetToDemo, clearAll, replaceAll } = useLibrary();
   const [message, setMessage] = useState<string | null>(null);
-  const [reports, setReports] = useState<ImportReport[]>([]);
   const [storage, setStorage] = useState<{ used: number; quota: number | null } | null>(null);
   const [backups, setBackups] = useState<BackupMeta[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
-  const courseInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     void storageReport(db).then(setStorage);
     void persistence.listBackups().then(setBackups);
   }, [db]);
 
-  /** Read a batch of course files, merging the valid ones and naming the rest. */
-  async function importCourseFiles(files: File[]) {
-    const packages: CoursePackage[] = [];
-    const failures: ImportReport[] = [];
-
-    for (const file of files) {
-      try {
-        const parsed = JSON.parse(await file.text());
-        const problem = validatePackage(parsed);
-        if (problem) {
-          failures.push({
-            ok: false,
-            error: `${file.name}: ${problem}`,
-            lessonsAdded: 0,
-            lessonsUpdated: 0,
-            courseCreated: false,
-            facultyCreated: false,
-          });
-          continue;
-        }
-        packages.push(parsed as CoursePackage);
-      } catch {
-        failures.push({
-          ok: false,
-          error: `${file.name}: not valid JSON.`,
-          lessonsAdded: 0,
-          lessonsUpdated: 0,
-          courseCreated: false,
-          facultyCreated: false,
-        });
-      }
-    }
-
-    const merged = packages.length > 0 ? importPackages(packages) : [];
-    setReports([...merged, ...failures]);
-    setMessage(null);
-  }
 
   function exportJson() {
     const blob = new Blob([JSON.stringify(db, null, 2)], {
@@ -92,51 +50,6 @@ export default function SettingsPage() {
       </div>
 
       <section className="card divide-y divide-hairline">
-        <Row
-          title="Add the SPI courses"
-          body="Puts the sixteen Smart Passive Income courses into your library, each linked back to its community page. Nothing else is touched, and running it twice changes nothing."
-          action={
-            <button
-              className="btn-ghost"
-              onClick={() => {
-                const added = addStarterCourses();
-                setReports([]);
-                setMessage(
-                  added > 0
-                    ? `Added ${added} SPI course${added === 1 ? "" : "s"}.`
-                    : "All sixteen SPI courses are already in your library.",
-                );
-              }}
-            >
-              <GraduationCap className="size-4" />
-              Add them
-            </button>
-          }
-        />
-        <Row
-          title="Add course files"
-          body="Merges one or more course files into your library. Nothing is removed, and re-importing a course updates it in place."
-          action={
-            <>
-              <button className="btn-primary" onClick={() => courseInput.current?.click()}>
-                <FolderPlus className="size-4" />
-                Add courses
-              </button>
-              <input
-                ref={courseInput}
-                type="file"
-                accept="application/json,.json"
-                multiple
-                className="hidden"
-                onChange={async (e) => {
-                  const files = Array.from(e.target.files ?? []);
-                  e.target.value = "";
-                  if (files.length) await importCourseFiles(files);
-                }}
-              />
-            </>
-          }
-        />
         <Row
           title="Export your library"
           body="Download everything as JSON — the same shape the database will use."
@@ -175,7 +88,6 @@ export default function SettingsPage() {
                     )
                       return;
                     replaceAll(parsed);
-                    setReports([]);
                     setMessage("Library restored from the file.");
                   } catch {
                     setMessage("That file could not be read as a Studiolo export.");
@@ -225,38 +137,6 @@ export default function SettingsPage() {
 
       {isSupabaseConfigured && (
         <section className="card divide-y divide-hairline">
-          <Row
-            title="Move this browser's library into your account"
-            body="Reads whatever is still stored locally in this browser and merges it into your account. Run it once, after signing in for the first time."
-            action={
-              <button
-                className="btn-ghost"
-                onClick={async () => {
-                  const result = await localPersistence.load();
-                  const local = result.status === "ok" ? result.db : null;
-                  if (!local || local.courses.length === 0) {
-                    setMessage("Nothing stored locally in this browser to move.");
-                    return;
-                  }
-                  const merged: typeof local = {
-                    version: 1,
-                    faculties: dedupe([...db.faculties, ...local.faculties]),
-                    creators: dedupe([...db.creators, ...local.creators]),
-                    courses: dedupe([...db.courses, ...local.courses]),
-                    lessons: dedupe([...db.lessons, ...local.lessons]),
-                  };
-                  replaceAll(merged);
-                  await persistence.save(merged);
-                  setMessage(
-                    `Moved ${local.courses.length} courses and ${local.lessons.length} lessons into your account.`,
-                  );
-                }}
-              >
-                <CloudUpload className="size-4" />
-                Move it up
-              </button>
-            }
-          />
           <Row
             title="Sign out"
             body="Your library stays in your account."
@@ -329,38 +209,6 @@ export default function SettingsPage() {
         </p>
       )}
 
-      {reports.length > 0 && (
-        <section className="card p-5">
-          <p className="font-medium text-slate-900">Import results</p>
-          <ul className="mt-3 space-y-2 text-[13px]">
-            {reports.map((r, i) => (
-              <li
-                key={i}
-                className={`rounded-xl px-3 py-2.5 ${
-                  r.ok ? "bg-brand-green/10 text-brand-green" : "bg-brand-red/10 text-brand-red"
-                }`}
-              >
-                {r.ok ? (
-                  <>
-                    <span className="font-medium">{r.courseTitle}</span>
-                    {r.facultyName && (
-                      <span className="text-brand-green"> → {r.facultyName}</span>
-                    )}
-                    <span className="text-brand-green">
-                      {" · "}
-                      {r.courseCreated ? "new course" : "updated"}
-                      {r.lessonsAdded > 0 && `, ${r.lessonsAdded} lessons added`}
-                      {r.lessonsUpdated > 0 && `, ${r.lessonsUpdated} updated`}
-                    </span>
-                  </>
-                ) : (
-                  r.error
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       <section className="card p-5">
         <p className="font-medium text-slate-900">What is stored</p>

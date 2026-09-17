@@ -153,6 +153,7 @@ alter table public.courses add column if not exists icon        text;
 alter table public.courses add column if not exists priority    text;
 alter table public.courses add column if not exists planned_for date;
 alter table public.courses add column if not exists plan_order  integer;
+alter table public.courses add column if not exists sort_order  integer;
 alter table public.courses add column if not exists subtitle    text;
 alter table public.courses add column if not exists description text;
 alter table public.courses add column if not exists creator_id  text;

@@ -52,6 +52,7 @@ const courseToRow = (c: Course): Row => ({
   id: c.id, faculty_id: c.facultyId, kind: c.kind ?? "course", title: c.title,
   icon: c.icon ?? null, priority: c.priority ?? null,
   planned_for: c.plannedFor ?? null, plan_order: c.planOrder ?? null,
+  sort_order: c.sortOrder ?? null,
   subtitle: c.subtitle ?? null, description: c.description ?? null,
   creator_id: c.creatorId ?? null, source_url: c.sourceUrl ?? null,
   topics: c.topics ?? [], accent: c.accent, track: c.track ?? null,

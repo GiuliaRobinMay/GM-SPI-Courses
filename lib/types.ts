@@ -85,6 +85,8 @@ export interface Course {
   plannedFor?: string;
   /** Hand-set position on the study plan. Beats priority when present. */
   planOrder?: number;
+  /** Hand-set position inside its collection. Falls back to title order. */
+  sortOrder?: number;
 
   createdAt: string;
   updatedAt: string;

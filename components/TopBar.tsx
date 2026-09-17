@@ -16,7 +16,7 @@ export function TopBar() {
   return (
     <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-hairline bg-canvas/85 px-6 py-3 backdrop-blur">
       <form
-        className="relative mx-auto w-full max-w-xl"
+        className="relative ml-auto w-full max-w-sm"
         onSubmit={(e) => {
           e.preventDefault();
           router.push(query.trim() ? `/search?q=${encodeURIComponent(query.trim())}` : "/search");

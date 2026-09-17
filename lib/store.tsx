@@ -83,6 +83,10 @@ interface LibraryValue {
 
   addCreator(input: Partial<Creator> & { name: string }): Creator;
 
+  /** Write the order of the collections in the sidebar. */
+  reorderCollections(facultyIds: string[]): void;
+  /** Write the order of the courses inside one collection. */
+  reorderCourses(courseIds: string[]): void;
   /**
    * Write a hand-set order across the study plan. Takes the full ordered
    * list, so one move renumbers everything and the result cannot drift.
@@ -390,6 +394,29 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
    * Put the SPI courses into whatever library already exists. Ids are stable,
    * so running it twice adds nothing the second time and no lesson is touched.
    */
+  const reorderCollections: LibraryValue["reorderCollections"] = useCallback(
+    (facultyIds) => {
+      const position = new Map(facultyIds.map((id, index) => [id, index]));
+      setDb((prev) => ({
+        ...prev,
+        faculties: prev.faculties.map((f) =>
+          position.has(f.id) ? { ...f, order: position.get(f.id)! } : f,
+        ),
+      }));
+    },
+    [],
+  );
+
+  const reorderCourses: LibraryValue["reorderCourses"] = useCallback((courseIds) => {
+    const position = new Map(courseIds.map((id, index) => [id, index]));
+    setDb((prev) => ({
+      ...prev,
+      courses: prev.courses.map((c) =>
+        position.has(c.id) ? { ...c, sortOrder: position.get(c.id) } : c,
+      ),
+    }));
+  }, []);
+
   const reorderPlan: LibraryValue["reorderPlan"] = useCallback((items) => {
     const position = new Map(items.map((item, index) => [item.id, index]));
     setDb((prev) => ({
@@ -452,6 +479,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       setLessonStatus,
       regenerateStudy,
       addCreator,
+      reorderCollections,
+      reorderCourses,
       reorderPlan,
       addStarterCourses,
       importPackages,
@@ -464,7 +493,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       lessonsOf, courseProgress, search, addFaculty, updateFaculty,
       removeFaculty, addCourse, updateCourse, removeCourse, addLesson,
       updateLesson, removeLesson, setLessonStatus, regenerateStudy, addCreator,
-      reorderPlan, addStarterCourses, importPackages, replaceAll, resetToDemo, clearAll,
+      reorderCollections, reorderCourses, reorderPlan, addStarterCourses, importPackages, replaceAll, resetToDemo, clearAll,
     ],
   );
 

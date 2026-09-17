@@ -5,13 +5,12 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   ChevronRight, FolderPlus, LayoutDashboard, PanelLeft, PanelLeftClose,
-  Pencil, Plus, Settings,
+  ChevronDown, ChevronUp, Pencil, Plus, Settings,
 } from "lucide-react";
 import { useLibrary } from "@/lib/store";
 import { accent } from "@/lib/theme";
 import { CourseDialog } from "./CourseDialog";
 import { FacultyDialog } from "./FacultyDialog";
-import { LessonDialog } from "./LessonDialog";
 import type { Course } from "@/lib/types";
 import { FacultyIcon } from "./Icon";
 
@@ -21,12 +20,12 @@ import { FacultyIcon } from "./Icon";
  */
 export function Sidebar() {
   const pathname = usePathname();
-  const { db, lessonsOf } = useLibrary();
+  const { db, reorderCollections, reorderCourses } = useLibrary();
   const [collapsed, setCollapsed] = useState(false);
   const [courseFor, setCourseFor] = useState<string | null>(null);
-  const [lessonFor, setLessonFor] = useState<string | null>(null);
   const [facultyEdit, setFacultyEdit] = useState<string | null>(null);
   const [newCollection, setNewCollection] = useState(false);
+  const [dragCourse, setDragCourse] = useState<{ faculty: string; index: number } | null>(null);
   const [shut, setShut] = useState<Set<string>>(loadShut);
 
   const you = db.creators.find((c) => c.isSelf);
@@ -37,18 +36,37 @@ export function Sidebar() {
    * collection does not make the first one harder to use.
    */
   const collections = [...db.faculties]
-    .sort((a, b) => a.order - b.order)
+    .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
     .map((faculty) => ({
       faculty,
+      // A hand-set position wins; anything never moved falls back to title.
       courses: db.courses
         .filter((c) => c.facultyId === faculty.id)
-        .sort((a, b) => a.title.localeCompare(b.title)),
-    }))
-    .filter((group) => group.courses.length > 0);
+        .sort(
+          (a, b) =>
+            (a.sortOrder ?? Number.MAX_SAFE_INTEGER) -
+              (b.sortOrder ?? Number.MAX_SAFE_INTEGER) ||
+            a.title.localeCompare(b.title),
+        ),
+    }));
 
   const orphans = db.courses
     .filter((c) => !db.faculties.some((f) => f.id === c.facultyId))
     .sort((a, b) => a.title.localeCompare(b.title));
+
+  /** Drop a collection, or a course within its collection, at a new spot. */
+  function move<T>(list: T[], from: number, to: number): T[] {
+    const next = [...list];
+    const [lifted] = next.splice(from, 1);
+    next.splice(to, 0, lifted);
+    return next;
+  }
+
+  function moveCollection(index: number, delta: number) {
+    const to = index + delta;
+    if (to < 0 || to >= collections.length) return;
+    reorderCollections(move(collections, index, to).map((g) => g.faculty.id));
+  }
 
   function toggle(id: string) {
     setShut((prev) => {
@@ -103,12 +121,30 @@ export function Sidebar() {
 
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="flex flex-col gap-3 overflow-y-auto px-3 pb-4">
-          {collections.map(({ faculty, courses }) => {
+          {collections.map(({ faculty, courses }, index) => {
             const open = !shut.has(faculty.id);
             return (
               <div key={faculty.id}>
                 {!collapsed && (
                   <div className="group/head flex items-center gap-0.5 px-3 pb-1">
+                    <span className="flex shrink-0 flex-col opacity-0 transition group-hover/head:opacity-100">
+                      <button
+                        onClick={() => moveCollection(index, -1)}
+                        disabled={index === 0}
+                        aria-label={`Move ${faculty.name} up`}
+                        className="text-slate-400 hover:text-slate-900 disabled:opacity-25"
+                      >
+                        <ChevronUp className="size-3" />
+                      </button>
+                      <button
+                        onClick={() => moveCollection(index, 1)}
+                        disabled={index === collections.length - 1}
+                        aria-label={`Move ${faculty.name} down`}
+                        className="text-slate-400 hover:text-slate-900 disabled:opacity-25"
+                      >
+                        <ChevronDown className="size-3" />
+                      </button>
+                    </span>
                     <button
                       onClick={() => toggle(faculty.id)}
                       className="flex min-w-0 flex-1 items-center gap-1.5 rounded-lg py-1 text-left"
@@ -145,14 +181,50 @@ export function Sidebar() {
 
                 {(open || collapsed) && (
                   <div className="flex flex-col gap-0.5">
-                    {courses.map((course) => (
-                      <CourseLink
+                    {courses.map((course, courseIndex) => (
+                      <div
                         key={course.id}
-                        course={course}
-                        collapsed={collapsed}
-                        active={pathname === `/course/${course.id}`}
-                      />
+                        draggable={!collapsed}
+                        onDragStart={(e) => {
+                          e.stopPropagation();
+                          setDragCourse({ faculty: faculty.id, index: courseIndex });
+                        }}
+                        onDragEnd={() => setDragCourse(null)}
+                        onDragOver={(e) =>
+                          dragCourse?.faculty === faculty.id && e.preventDefault()
+                        }
+                        onDrop={(e) => {
+                          if (dragCourse?.faculty !== faculty.id) return;
+                          e.preventDefault();
+                          e.stopPropagation();
+                          reorderCourses(
+                            move(courses, dragCourse.index, courseIndex).map((c) => c.id),
+                          );
+                          setDragCourse(null);
+                        }}
+                        className={
+                          dragCourse?.faculty === faculty.id &&
+                          dragCourse.index === courseIndex
+                            ? "opacity-40"
+                            : undefined
+                        }
+                      >
+                        <CourseLink
+                          course={course}
+                          collapsed={collapsed}
+                          active={pathname === `/course/${course.id}`}
+                        />
+                      </div>
                     ))}
+
+                    {!collapsed && courses.length === 0 && (
+                      <button
+                        onClick={() => setCourseFor(faculty.id)}
+                        className="rounded-xl px-3 py-2 text-left text-[13px] text-slate-400 transition hover:bg-slate-50 hover:text-slate-700"
+                      >
+                        No courses yet — add one
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -186,14 +258,6 @@ export function Sidebar() {
 
       <div className="mt-auto border-t border-hairline px-3 py-3">
         <div className="mb-1 flex flex-col gap-0.5">
-          <button
-            onClick={() => setLessonFor("")}
-            title={collapsed ? "Add material" : undefined}
-            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
-          >
-            <Plus className="size-[18px] shrink-0" strokeWidth={1.8} />
-            {!collapsed && <span>Add material</span>}
-          </button>
           <button
             onClick={() => setNewCollection(true)}
             title={collapsed ? "New collection" : undefined}
@@ -239,7 +303,6 @@ export function Sidebar() {
         onClose={() => setCourseFor(null)}
         facultyId={courseFor ?? undefined}
       />
-      <LessonDialog open={lessonFor !== null} onClose={() => setLessonFor(null)} />
       <FacultyDialog
         open={facultyEdit !== null}
         onClose={() => setFacultyEdit(null)}
@@ -264,6 +327,7 @@ function CourseLink({
   return (
     <Link
       href={`/course/${course.id}`}
+      draggable={false}
       title={collapsed ? course.title : undefined}
       className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
         active
