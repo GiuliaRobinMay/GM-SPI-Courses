@@ -5,12 +5,13 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   ChevronRight, FolderPlus, LayoutDashboard, PanelLeft, PanelLeftClose,
-  ChevronDown, ChevronUp, Pencil, Plus, Settings,
+  ChevronDown, ChevronUp, Pencil, Plus, Settings, Upload,
 } from "lucide-react";
 import { useLibrary } from "@/lib/store";
 import { accent } from "@/lib/theme";
 import { CourseDialog } from "./CourseDialog";
 import { FacultyDialog } from "./FacultyDialog";
+import { ImportDialog } from "./ImportDialog";
 import type { Course } from "@/lib/types";
 import { FacultyIcon } from "./Icon";
 
@@ -25,6 +26,7 @@ export function Sidebar() {
   const [courseFor, setCourseFor] = useState<string | null>(null);
   const [facultyEdit, setFacultyEdit] = useState<string | null>(null);
   const [newCollection, setNewCollection] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [dragCourse, setDragCourse] = useState<{ faculty: string; index: number } | null>(null);
   const [shut, setShut] = useState<Set<string>>(loadShut);
 
@@ -259,6 +261,14 @@ export function Sidebar() {
       <div className="mt-auto border-t border-hairline px-3 py-3">
         <div className="mb-1 flex flex-col gap-0.5">
           <button
+            onClick={() => setImportOpen(true)}
+            title={collapsed ? "Import a library" : undefined}
+            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+          >
+            <Upload className="size-[18px] shrink-0" strokeWidth={1.8} />
+            {!collapsed && <span>Import a library</span>}
+          </button>
+          <button
             onClick={() => setNewCollection(true)}
             title={collapsed ? "New collection" : undefined}
             className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
@@ -309,6 +319,7 @@ export function Sidebar() {
         facultyId={facultyEdit ?? undefined}
       />
       <FacultyDialog open={newCollection} onClose={() => setNewCollection(false)} />
+      <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} />
     </aside>
   );
 }

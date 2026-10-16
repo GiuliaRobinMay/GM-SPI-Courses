@@ -51,6 +51,30 @@ function stableId(prefix: string, externalId: string): string {
 }
 
 /**
+ * Pull the course packages out of a parsed file.
+ *
+ * A file holds either one package or an array of them — a whole scraped
+ * library arrives as one array rather than as fifteen separate files.
+ * Returns the packages, or the reason the file is unusable.
+ */
+export function readPackages(
+  value: unknown,
+): { packages: CoursePackage[] } | { error: string } {
+  const list = Array.isArray(value) ? value : [value];
+  if (list.length === 0) return { error: "The file holds an empty list." };
+
+  for (const [i, entry] of list.entries()) {
+    const problem = validatePackage(entry);
+    if (problem) {
+      return {
+        error: list.length > 1 ? `Course ${i + 1} of ${list.length}: ${problem}` : problem,
+      };
+    }
+  }
+  return { packages: list as CoursePackage[] };
+}
+
+/**
  * Validate an unknown parsed JSON value as a course package.
  * Returns the reason it is unusable, or null when it is fine.
  */
@@ -145,11 +169,14 @@ export function mergePackage(
     ? stableId("co", pkg.course.externalId)
     : undefined;
 
-  let course = courses.find(
-    (c) =>
-      (externalCourseId && c.id === externalCourseId) ||
-      (c.facultyId === faculty!.id && norm(c.title) === norm(pkg.course.title)),
-  );
+  // An externalId IS the identity. Falling back to the title as well would
+  // merge two distinct things that happen to share a name.
+  const course_ = externalCourseId
+    ? courses.find((c) => c.id === externalCourseId)
+    : courses.find(
+        (c) => c.facultyId === faculty!.id && norm(c.title) === norm(pkg.course.title),
+      );
+  let course = course_;
 
   if (course) {
     const updated: Course = {
@@ -189,11 +216,11 @@ export function mergePackage(
     const externalLessonId = incoming.externalId
       ? stableId("le", incoming.externalId)
       : undefined;
-    const existing = lessons.find(
-      (l) =>
-        (externalLessonId && l.id === externalLessonId) ||
-        (l.courseId === course!.id && norm(l.title) === norm(incoming.title)),
-    );
+    const existing = externalLessonId
+      ? lessons.find((l) => l.id === externalLessonId)
+      : lessons.find(
+          (l) => l.courseId === course!.id && norm(l.title) === norm(incoming.title),
+        );
 
     const transcript = incoming.transcript?.trim() ?? "";
     const base = {

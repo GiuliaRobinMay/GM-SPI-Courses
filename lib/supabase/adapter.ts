@@ -159,6 +159,19 @@ function diff<T extends Entity>(
 
 const TABLES = ["faculties", "creators", "courses", "lessons"] as const;
 
+/**
+ * Rows per write. A lesson carries its whole transcript, so an import of a
+ * few hundred lands as megabytes — enough for one request to be rejected or
+ * time out. Chunking keeps each write a sensible size.
+ */
+const CHUNK = 40;
+
+function chunked<T>(items: T[]): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += CHUNK) out.push(items.slice(i, i + CHUNK));
+  return out;
+}
+
 /* ------------------------------------------------------------------ */
 
 export function createSupabaseAdapter(): PersistenceAdapter {
@@ -211,17 +224,17 @@ export function createSupabaseAdapter(): PersistenceAdapter {
       // Parents before children on the way in, children first on the way out,
       // so composite foreign keys are never momentarily violated.
       for (const table of TABLES) {
-        const { upserts } = plans[table];
-        if (upserts.length === 0) continue;
-        const { error } = await supabase.from(table).upsert(upserts);
-        if (error) throw new Error(`${table}: ${error.message}`);
+        for (const batch of chunked(plans[table].upserts)) {
+          const { error } = await supabase.from(table).upsert(batch);
+          if (error) throw new Error(`${table}: ${error.message}`);
+        }
       }
 
       for (const table of [...TABLES].reverse()) {
-        const { deletions } = plans[table];
-        if (deletions.length === 0) continue;
-        const { error } = await supabase.from(table).delete().in("id", deletions);
-        if (error) throw new Error(`${table}: ${error.message}`);
+        for (const batch of chunked(plans[table].deletions)) {
+          const { error } = await supabase.from(table).delete().in("id", batch);
+          if (error) throw new Error(`${table}: ${error.message}`);
+        }
       }
 
       lastSaved = structuredClone(db);

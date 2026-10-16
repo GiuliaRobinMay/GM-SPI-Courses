@@ -110,6 +110,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const hydrated = useRef(false);
+  /** Always the current library, so a merge can read it without a state updater. */
+  const latest = useRef<Database>(emptyDatabase);
 
   useEffect(() => {
     let cancelled = false;
@@ -125,7 +127,9 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       }
 
       const base = result.status === "ok" ? result.db : seedDatabase();
-      setDb(withStarterCourses(withStudyOutput(base)).db);
+      const ready = withStarterCourses(withStudyOutput(base)).db;
+      latest.current = ready;
+      setDb(ready);
       hydrated.current = true;
       setReady(true);
     });
@@ -133,6 +137,10 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    latest.current = db;
+  }, [db]);
 
   useEffect(() => {
     if (!hydrated.current) return;
@@ -375,15 +383,13 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const importPackages: LibraryValue["importPackages"] = useCallback((packages) => {
-    // mergeAll is pure, so the reports are computed here and the state update
-    // just swaps in the result.
-    let reports: ImportReport[] = [];
-    setDb((prev) => {
-      const result = mergeAll(prev, packages);
-      reports = result.reports;
-      return result.db;
-    });
-    return reports;
+    // Merge against the ref, not inside setDb: a state updater may be deferred
+    // or replayed, and the reports were read back empty when two files were
+    // imported in a row.
+    const result = mergeAll(latest.current, packages);
+    latest.current = result.db;
+    setDb(result.db);
+    return result.reports;
   }, []);
 
   const replaceAll: LibraryValue["replaceAll"] = useCallback((next) => {
