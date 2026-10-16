@@ -19,7 +19,9 @@ export function NextUp() {
   const { db, course, lessonsOf } = useLibrary();
 
   const planned = [
-    ...db.courses.filter((c) => c.priority).map((c) => ({ kind: "course" as const, item: c })),
+    ...db.courses
+      .filter((c) => c.priority && !c.archived)
+      .map((c) => ({ kind: "course" as const, item: c })),
     ...db.lessons
       .filter((l) => l.priority && l.status !== "done")
       .map((l) => ({ kind: "lesson" as const, item: l })),

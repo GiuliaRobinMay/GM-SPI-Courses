@@ -64,7 +64,7 @@ export function StudyPlan() {
 
   const items: PlanItem[] = [
     ...db.courses
-      .filter((c) => c.priority)
+      .filter((c) => c.priority && !c.archived)
       .map((c) => {
         const lessons = lessonsOf(c.id);
         const minutes = lessons.reduce((sum, l) => sum + (l.durationMinutes ?? 0), 0);
@@ -85,7 +85,10 @@ export function StudyPlan() {
         };
       }),
     ...db.lessons
-      .filter((l) => l.priority && l.status !== "done")
+      .filter((l) => {
+        const parent = course(l.courseId);
+        return l.priority && l.status !== "done" && !parent?.archived;
+      })
       .map((l) => {
         const parent = course(l.courseId);
         return {

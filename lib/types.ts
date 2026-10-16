@@ -87,6 +87,8 @@ export interface Course {
   planOrder?: number;
   /** Hand-set position inside its collection. Falls back to title order. */
   sortOrder?: number;
+  /** Out of the way but not gone. Hidden from the sidebar and the plan. */
+  archived?: boolean;
 
   createdAt: string;
   updatedAt: string;

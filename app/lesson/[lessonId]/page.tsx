@@ -10,6 +10,7 @@ import {
 import { useLibrary } from "@/lib/store";
 import { youtubeId, wordCount } from "@/lib/transcript";
 import { LessonDialog } from "@/components/LessonDialog";
+import { Prose } from "@/components/Prose";
 import { PlanControls } from "@/components/PlanControls";
 import { EmptyState, Tag } from "@/components/ui";
 import type { Lesson, LessonStatus } from "@/lib/types";
@@ -378,16 +379,7 @@ export default function LessonPage({
                   Copy
                 </button>
               </div>
-              <div className="space-y-4">
-                {item.content.split(/\n{2,}/).map((para, i) => (
-                  <p
-                    key={i}
-                    className="whitespace-pre-line text-[14px] leading-[1.75] text-slate-700"
-                  >
-                    {para}
-                  </p>
-                ))}
-              </div>
+              <Prose>{item.content}</Prose>
             </section>
           )}
 

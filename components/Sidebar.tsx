@@ -5,13 +5,15 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   ChevronRight, FolderPlus, LayoutDashboard, PanelLeft, PanelLeftClose,
-  ChevronDown, ChevronUp, Pencil, Plus, Settings, Upload,
+  Archive, ArrowDown, ArrowUp, ArchiveRestore, ChevronDown, ChevronUp,
+  Pencil, Plus, Settings, Trash2, Upload,
 } from "lucide-react";
 import { useLibrary } from "@/lib/store";
 import { accent } from "@/lib/theme";
 import { CourseDialog } from "./CourseDialog";
 import { FacultyDialog } from "./FacultyDialog";
 import { ImportDialog } from "./ImportDialog";
+import { RowMenu } from "./RowMenu";
 import type { Course } from "@/lib/types";
 import { FacultyIcon } from "./Icon";
 
@@ -21,7 +23,11 @@ import { FacultyIcon } from "./Icon";
  */
 export function Sidebar() {
   const pathname = usePathname();
-  const { db, reorderCollections, reorderCourses } = useLibrary();
+  const {
+    db, reorderCollections, reorderCourses, updateCourse, removeCourse,
+    removeFaculty, lessonsOf,
+  } = useLibrary();
+  const [showArchived, setShowArchived] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [courseFor, setCourseFor] = useState<string | null>(null);
   const [facultyEdit, setFacultyEdit] = useState<string | null>(null);
@@ -43,7 +49,7 @@ export function Sidebar() {
       faculty,
       // A hand-set position wins; anything never moved falls back to title.
       courses: db.courses
-        .filter((c) => c.facultyId === faculty.id)
+        .filter((c) => c.facultyId === faculty.id && (showArchived || !c.archived))
         .sort(
           (a, b) =>
             (a.sortOrder ?? Number.MAX_SAFE_INTEGER) -
@@ -164,13 +170,45 @@ export function Sidebar() {
                         {courses.length}
                       </span>
                     </button>
-                    <button
-                      onClick={() => setFacultyEdit(faculty.id)}
-                      className="btn-quiet px-1 py-1 opacity-0 transition group-hover/head:opacity-100"
-                      aria-label={`Rename ${faculty.name}`}
-                    >
-                      <Pencil className="size-3.5" />
-                    </button>
+                    <span className="opacity-0 transition group-hover/head:opacity-100">
+                      <RowMenu
+                        label={faculty.name}
+                        items={[
+                          {
+                            label: "Rename",
+                            icon: <Pencil className="size-3.5" />,
+                            onSelect: () => setFacultyEdit(faculty.id),
+                          },
+                          {
+                            label: "Move up",
+                            icon: <ArrowUp className="size-3.5" />,
+                            disabled: index === 0,
+                            onSelect: () => moveCollection(index, -1),
+                          },
+                          {
+                            label: "Move down",
+                            icon: <ArrowDown className="size-3.5" />,
+                            disabled: index === collections.length - 1,
+                            onSelect: () => moveCollection(index, 1),
+                          },
+                          {
+                            label: "Delete collection",
+                            icon: <Trash2 className="size-3.5" />,
+                            danger: true,
+                            onSelect: () => {
+                              const lessons = courses.reduce(
+                                (n, c) => n + lessonsOf(c.id).length, 0);
+                              if (
+                                confirm(
+                                  `Delete "${faculty.name}", its ${courses.length} course(s) and ${lessons} lesson(s)? This cannot be undone.`,
+                                )
+                              )
+                                removeFaculty(faculty.id);
+                            },
+                          },
+                        ]}
+                      />
+                    </span>
                     <button
                       onClick={() => setCourseFor(faculty.id)}
                       className="btn-quiet px-1 py-1"
@@ -211,11 +249,64 @@ export function Sidebar() {
                             : undefined
                         }
                       >
-                        <CourseLink
-                          course={course}
-                          collapsed={collapsed}
-                          active={pathname === `/course/${course.id}`}
-                        />
+                        <div className="group/row relative flex items-center">
+                          <CourseLink
+                            course={course}
+                            collapsed={collapsed}
+                            active={pathname === `/course/${course.id}`}
+                          />
+                          {!collapsed && (
+                            <span className="absolute right-1 opacity-0 transition group-hover/row:opacity-100">
+                              <RowMenu
+                                label={course.title}
+                                items={[
+                                  {
+                                    label: "Move up",
+                                    icon: <ArrowUp className="size-3.5" />,
+                                    disabled: courseIndex === 0,
+                                    onSelect: () =>
+                                      reorderCourses(
+                                        move(courses, courseIndex, courseIndex - 1)
+                                          .map((c) => c.id),
+                                      ),
+                                  },
+                                  {
+                                    label: "Move down",
+                                    icon: <ArrowDown className="size-3.5" />,
+                                    disabled: courseIndex === courses.length - 1,
+                                    onSelect: () =>
+                                      reorderCourses(
+                                        move(courses, courseIndex, courseIndex + 1)
+                                          .map((c) => c.id),
+                                      ),
+                                  },
+                                  {
+                                    label: course.archived ? "Unarchive" : "Archive",
+                                    icon: course.archived
+                                      ? <ArchiveRestore className="size-3.5" />
+                                      : <Archive className="size-3.5" />,
+                                    onSelect: () =>
+                                      updateCourse(course.id, { archived: !course.archived }),
+                                  },
+                                  {
+                                    label: "Delete course",
+                                    icon: <Trash2 className="size-3.5" />,
+                                    danger: true,
+                                    onSelect: () => {
+                                      const n = lessonsOf(course.id).length;
+                                      if (
+                                        confirm(
+                                          `Delete "${course.title}" and its ${n} lesson(s)? This cannot be undone.`,
+                                        )
+                                      )
+                                        removeCourse(course.id);
+                                    },
+                                  },
+                                ]}
+                              />
+                            </span>
+                          )}
+                        </div>
                       </div>
                     ))}
 
@@ -260,6 +351,17 @@ export function Sidebar() {
 
       <div className="mt-auto border-t border-hairline px-3 py-3">
         <div className="mb-1 flex flex-col gap-0.5">
+          {db.courses.some((c) => c.archived) && !collapsed && (
+            <button
+              onClick={() => setShowArchived((v) => !v)}
+              className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+            >
+              <Archive className="size-[18px] shrink-0" strokeWidth={1.8} />
+              <span>
+                {showArchived ? "Hide archived" : `Archived (${db.courses.filter((c) => c.archived).length})`}
+              </span>
+            </button>
+          )}
           <button
             onClick={() => setImportOpen(true)}
             title={collapsed ? "Import a library" : undefined}
